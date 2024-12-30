@@ -3,7 +3,13 @@ import os
 import json
 import argparse
 import logging
+import sys
 from project_detector import scan_for_projects
+from analyzers.dependency_analyzer import DependencyAnalyzer
+from analyzers.git_analyzer import GitAnalyzer
+
+# Thêm thư mục hiện tại vào PYTHONPATH
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 def create_launch_agent(project_path, python_path='/usr/local/bin/python3'):
     """Create and install the LaunchAgent plist file."""
@@ -67,6 +73,12 @@ def setup_cursorfocus():
                        help='Scan directory for projects. If no path provided, scans current directory')
     parser.add_argument('--scan-depth', type=int, default=3, help='Maximum depth for project scanning')
     parser.add_argument('--auto-add', '-a', action='store_true', help='Automatically add all found projects')
+    parser.add_argument('--analyze-deps', '-D', action='store_true', 
+                       help='Analyze project dependencies')
+    parser.add_argument('--analyze-git', '-G', action='store_true',
+                       help='Analyze Git repository')
+    parser.add_argument('--output-dir', '-o', default='reports',
+                       help='Directory for analysis reports')
     
     args = parser.parse_args()
     
@@ -245,6 +257,43 @@ def setup_cursorfocus():
     
     print("\nTo start monitoring all projects, run:")
     print(f"python3 {os.path.join(script_dir, 'focus.py')}")
+
+    # Xử lý phân tích nếu được yêu cầu
+    if args.analyze_deps or args.analyze_git:
+        for project in config['projects']:
+            project_path = project['project_path']
+            
+            # Tạo thư mục reports nếu chưa tồn tại
+            reports_dir = os.path.join(project_path, args.output_dir)
+            os.makedirs(reports_dir, exist_ok=True)
+            
+            if args.analyze_deps:
+                print(f"\n📦 Analyzing dependencies for {project['name']}...")
+                try:
+                    dep_analyzer = DependencyAnalyzer(project_path)
+                    dep_report = dep_analyzer.generate_report()
+                    
+                    report_path = os.path.join(reports_dir, 'dependencies.md')
+                    # Thêm encoding='utf-8' khi ghi file
+                    with open(report_path, 'w', encoding='utf-8') as f:
+                        f.write(dep_report)
+                    print(f"✅ Dependencies report saved to: {report_path}")
+                except Exception as e:
+                    print(f"❌ Error analyzing dependencies: {str(e)}")
+                
+            if args.analyze_git:
+                print(f"\n🔍 Analyzing Git repository for {project['name']}...")
+                try:
+                    git_analyzer = GitAnalyzer(project_path)
+                    git_report = git_analyzer.generate_report()
+                    
+                    report_path = os.path.join(reports_dir, 'git_analysis.md')
+                    # Thêm encoding='utf-8' khi ghi file
+                    with open(report_path, 'w', encoding='utf-8') as f:
+                        f.write(git_report)
+                    print(f"✅ Git analysis report saved to: {report_path}")
+                except Exception as e:
+                    print(f"❌ Error analyzing git repository: {str(e)}")
 
 def load_or_create_config(config_path):
     """Load existing config or create default one."""
