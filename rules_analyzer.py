@@ -86,6 +86,15 @@ class RulesAnalyzer:
 
     def _detect_framework(self) -> str:
         """Detect the framework used in the project."""
+        # Check for Bun via bunfig.toml or bun.toml
+        bun_config_paths = [
+            os.path.join(self.project_path, 'bunfig.toml'),
+            os.path.join(self.project_path, 'bun.toml')
+        ]
+        if any(os.path.exists(path) for path in bun_config_paths) or \
+           os.path.exists(os.path.join(self.project_path, 'bun.lockb')):
+            return 'bun'
+
         # Check package.json for JS/TS frameworks
         package_json_path = os.path.join(self.project_path, 'package.json')
         if os.path.exists(package_json_path):
@@ -94,6 +103,10 @@ class RulesAnalyzer:
                     data = json.load(f)
                     deps = {**data.get('dependencies', {}), **data.get('devDependencies', {})}
                     
+                    # Add Bun detection
+                    if 'bun' in deps or os.path.exists(os.path.join(self.project_path, 'bun.lockb')):
+                        return 'bun'
+                        
                     if 'react' in deps:
                         return 'react'
                     if 'vue' in deps:

@@ -65,6 +65,11 @@ def get_default_config():
             'severe': 2.0
         },
         'project_types': {
+            'bun': {
+                'indicators': ['bun.lockb', 'bun.toml', 'bunfig.toml'],
+                'required_files': [],
+                'description': 'Bun Project'
+            },
             'chrome_extension': {
                 'indicators': ['manifest.json'],
                 'required_files': [],
