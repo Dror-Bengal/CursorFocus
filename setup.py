@@ -8,7 +8,7 @@ from project_detector import scan_for_projects
 from analyzers.dependency_analyzer import DependencyAnalyzer
 from analyzers.git_analyzer import GitAnalyzer
 
-# Thêm thư mục hiện tại vào PYTHONPATH
+# Add current directory to PYTHONPATH
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 def create_launch_agent(project_path, python_path='/usr/local/bin/python3'):
@@ -258,12 +258,12 @@ def setup_cursorfocus():
     print("\nTo start monitoring all projects, run:")
     print(f"python3 {os.path.join(script_dir, 'focus.py')}")
 
-    # Xử lý phân tích nếu được yêu cầu
+    # Process analysis if requested
     if args.analyze_deps or args.analyze_git:
         for project in config['projects']:
             project_path = project['project_path']
             
-            # Tạo thư mục reports nếu chưa tồn tại
+            # Create reports directory if it doesn't exist
             reports_dir = os.path.join(project_path, args.output_dir)
             os.makedirs(reports_dir, exist_ok=True)
             
@@ -274,7 +274,7 @@ def setup_cursorfocus():
                     dep_report = dep_analyzer.generate_report()
                     
                     report_path = os.path.join(reports_dir, 'dependencies.md')
-                    # Thêm encoding='utf-8' khi ghi file
+                    # Add encoding='utf-8' when writing file
                     with open(report_path, 'w', encoding='utf-8') as f:
                         f.write(dep_report)
                     print(f"✅ Dependencies report saved to: {report_path}")
@@ -288,7 +288,7 @@ def setup_cursorfocus():
                     git_report = git_analyzer.generate_report()
                     
                     report_path = os.path.join(reports_dir, 'git_analysis.md')
-                    # Thêm encoding='utf-8' khi ghi file
+                    # Add encoding='utf-8' when writing file
                     with open(report_path, 'w', encoding='utf-8') as f:
                         f.write(git_report)
                     print(f"✅ Git analysis report saved to: {report_path}")
