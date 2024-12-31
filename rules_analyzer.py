@@ -70,7 +70,14 @@ class RulesAnalyzer:
             '.java': 'java',
             '.rb': 'ruby',
             '.php': 'php',
-            '.go': 'go'
+            '.go': 'go',
+            '.sh': 'shell',
+            '.cpp': 'cpp',
+            '.hpp': 'cpp',
+            '.h': 'cpp',
+            '.cc': 'cpp',
+            '.cs': 'csharp',
+            '.csproj': 'csharp'
         }
 
         # Find the most common language
@@ -135,6 +142,88 @@ class RulesAnalyzer:
             except:
                 pass
 
+        # Check composer.json for PHP frameworks
+        composer_json_path = os.path.join(self.project_path, 'composer.json')
+        if os.path.exists(composer_json_path):
+            try:
+                with open(composer_json_path, 'r') as f:
+                    data = json.load(f)
+                    deps = {**data.get('require', {}), **data.get('require-dev', {})}
+                    
+                    if 'laravel/framework' in deps:
+                        return 'laravel'
+                    if 'symfony/symfony' in deps:
+                        return 'symfony'
+                    if 'cakephp/cakephp' in deps:
+                        return 'cakephp'
+            except:
+                pass
+
+        # Check Gemfile for Ruby frameworks
+        gemfile_path = os.path.join(self.project_path, 'Gemfile')
+        if os.path.exists(gemfile_path):
+            try:
+                with open(gemfile_path, 'r') as f:
+                    content = f.read().lower()
+                    if 'rails' in content:
+                        return 'rails'
+                    if 'sinatra' in content:
+                        return 'sinatra'
+            except:
+                pass
+
+        # Check go.mod for Go frameworks
+        go_mod_path = os.path.join(self.project_path, 'go.mod')
+        if os.path.exists(go_mod_path):
+            try:
+                with open(go_mod_path, 'r') as f:
+                    content = f.read().lower()
+                    if 'gin-gonic/gin' in content:
+                        return 'gin'
+                    if 'gorilla/mux' in content:
+                        return 'gorilla'
+                    if 'echo' in content:
+                        return 'echo'
+            except:
+                pass
+
+        # Check for C++ frameworks
+        cmake_path = os.path.join(self.project_path, 'CMakeLists.txt')
+        if os.path.exists(cmake_path):
+            try:
+                with open(cmake_path, 'r') as f:
+                    content = f.read().lower()
+                    if 'qt' in content:
+                        return 'qt'
+                    if 'boost' in content:
+                        return 'boost'
+                    if 'opencv' in content:
+                        return 'opencv'
+            except:
+                pass
+
+        # Check for C# frameworks
+        csproj_files = []
+        for root, _, files in os.walk(self.project_path):
+            for file in files:
+                if file.endswith('.csproj'):
+                    csproj_files.append(os.path.join(root, file))
+
+        for csproj in csproj_files:
+            try:
+                with open(csproj, 'r') as f:
+                    content = f.read().lower()
+                    if 'microsoft.aspnetcore' in content:
+                        return 'aspnet_core'
+                    if 'microsoft.net.sdk.web' in content:
+                        return 'aspnet_core'
+                    if 'xamarin' in content:
+                        return 'xamarin'
+                    if 'microsoft.maui' in content:
+                        return 'maui'
+            except:
+                pass
+
         return 'none'
 
     def _detect_project_type(self) -> str:
@@ -168,3 +257,36 @@ class RulesAnalyzer:
                 return 'web application'
 
         return 'application' 
+
+    def _analyze_shell_script(self, file_path: str) -> Dict:
+        """Analyze shell script specific rules."""
+        results = {
+            'warnings': [],
+            'suggestions': []
+        }
+        
+        try:
+            with open(file_path, 'r') as f:
+                content = f.read()
+                
+            # Check for shebang
+            if not content.startswith('#!/'):
+                results['warnings'].append('Missing shebang line')
+                results['suggestions'].append('Add #!/bin/bash or appropriate shebang')
+                
+            # Check for executable permission
+            if not os.access(file_path, os.X_OK):
+                results['warnings'].append('Script is not executable')
+                results['suggestions'].append('Run: chmod +x script.sh')
+                
+            # Check for common shell script practices
+            if 'set -e' not in content:
+                results['suggestions'].append('Consider adding "set -e" for error handling')
+                
+            if 'set -u' not in content:
+                results['suggestions'].append('Consider adding "set -u" for undefined variable checking')
+                
+        except Exception as e:
+            results['warnings'].append(f'Error analyzing shell script: {str(e)}')
+            
+        return results 

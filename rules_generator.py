@@ -101,6 +101,69 @@ class RulesGenerator:
                 'use Flask blueprints for organization',
                 'implement proper error handling',
                 'use Flask-SQLAlchemy for database operations'
+            ],
+            'laravel': [
+                'follow Laravel conventions',
+                'use Eloquent ORM for database operations',
+                'implement proper middleware',
+                'use blade templating engine',
+                'follow MVC architecture'
+            ],
+            'symfony': [
+                'follow Symfony best practices',
+                'use Doctrine ORM',
+                'implement proper services',
+                'use Twig templating',
+                'follow SOLID principles'
+            ],
+            'rails': [
+                'follow Ruby on Rails conventions',
+                'use ActiveRecord patterns',
+                'implement proper helpers',
+                'follow RESTful routing',
+                'use asset pipeline'
+            ],
+            'gin': [
+                'use proper middleware chains',
+                'implement proper error handling',
+                'use gin.Context correctly',
+                'follow RESTful API design',
+                'proper route grouping'
+            ],
+            'echo': [
+                'use middleware effectively',
+                'implement proper error handling',
+                'use echo.Context correctly',
+                'follow RESTful API design',
+                'proper route organization'
+            ],
+            'qt': [
+                'follow Qt naming conventions',
+                'use Qt smart pointers',
+                'implement proper signal/slot connections',
+                'use Qt resource system',
+                'follow Qt memory management guidelines'
+            ],
+            'boost': [
+                'use Boost smart pointers appropriately',
+                'leverage Boost libraries effectively',
+                'follow Boost conventions',
+                'implement proper error handling',
+                'use Boost testing framework'
+            ],
+            'aspnet_core': [
+                'follow ASP.NET Core conventions',
+                'use dependency injection',
+                'implement proper middleware',
+                'follow MVC/Razor Pages patterns',
+                'use Entity Framework Core properly'
+            ],
+            'maui': [
+                'follow .NET MAUI guidelines',
+                'implement MVVM pattern',
+                'use platform-specific features appropriately',
+                'follow XAML best practices',
+                'proper resource management'
             ]
         }
         return framework_rules.get(framework.lower(), [])
@@ -122,6 +185,45 @@ class RulesGenerator:
                 'use strict type checking',
                 'leverage type inference',
                 'use interface over type when possible'
+            ],
+            'php': [
+                'follow PSR standards',
+                'use type declarations',
+                'proper error handling',
+                'follow OOP principles',
+                'use namespaces effectively'
+            ],
+            'ruby': [
+                'follow Ruby style guide',
+                'use proper naming conventions',
+                'implement error handling',
+                'follow DRY principles',
+                'use blocks and procs effectively'
+            ],
+            'go': [
+                'follow Go style guide',
+                'use proper error handling',
+                'implement interfaces correctly',
+                'use goroutines appropriately',
+                'follow package organization conventions'
+            ],
+            'cpp': [
+                'follow modern C++ guidelines',
+                'use RAII principles',
+                'prefer smart pointers over raw pointers',
+                'follow const correctness',
+                'use STL algorithms when appropriate',
+                'implement proper memory management',
+                'use references over pointers when possible'
+            ],
+            'csharp': [
+                'follow C# coding conventions',
+                'use proper access modifiers',
+                'implement IDisposable when needed',
+                'use async/await properly',
+                'follow LINQ best practices',
+                'use properties over public fields',
+                'implement proper exception handling'
             ]
         }
         return language_rules.get(language.lower(), [])
@@ -160,6 +262,17 @@ class RulesGenerator:
             except:
                 pass
 
+        # Add shell testing framework detection
+        for root, _, files in os.walk(self.project_path):
+            for file in files:
+                if file.endswith('.sh'):
+                    with open(os.path.join(root, file), 'r') as f:
+                        content = f.read().lower()
+                        if 'bats' in content:
+                            testing_frameworks.append('bats')
+                        elif 'shunit2' in content:
+                            testing_frameworks.append('shunit2')
+                        
         return testing_frameworks if testing_frameworks else ['jest']  # Default to jest
 
     def _add_project_type_rules(self, rules: Dict[str, Any], project_type: str):
@@ -222,5 +335,67 @@ class RulesGenerator:
                     "frameworks": ["jest"],
                     "coverage_threshold": 80
                 }
+            }
+        } 
+
+    def _detect_shell_config(self) -> Dict:
+        """Detect shell script configuration and requirements."""
+        shell_config = {
+            'shell_type': 'bash',  # Default to bash
+            'requirements': [],
+            'recommended_practices': [
+                'Add shebang line (#!/bin/bash)',
+                'Make scripts executable (chmod +x)',
+                'Use set -e for error handling',
+                'Use set -u for undefined variables',
+                'Add help/usage information',
+                'Include error handling'
+            ]
+        }
+        
+        # Detect shell type from shebang
+        for root, _, files in os.walk(self.project_path):
+            for file in files:
+                if file.endswith('.sh'):
+                    try:
+                        with open(os.path.join(root, file), 'r') as f:
+                            first_line = f.readline().strip()
+                            if first_line.startswith('#!'):
+                                if 'zsh' in first_line:
+                                    shell_config['shell_type'] = 'zsh'
+                                elif 'dash' in first_line:
+                                    shell_config['shell_type'] = 'dash'
+                    except Exception:
+                        continue
+                        
+        return shell_config
+
+    def generate_shell_rules(self) -> Dict:
+        """Generate specific rules for shell scripts."""
+        return {
+            'naming_convention': {
+                'files': '*.sh',
+                'functions': 'lowercase_with_underscores'
+            },
+            'required_headers': [
+                'shebang',
+                'description',
+                'usage'
+            ],
+            'best_practices': [
+                'Use functions for reusable code',
+                'Quote variables when used',
+                'Use meaningful function and variable names',
+                'Add error handling',
+                'Include logging',
+                'Document complex commands'
+            ],
+            'linting': {
+                'recommended': 'shellcheck',
+                'rules': [
+                    'SC2034',  # Unused variables
+                    'SC2086',  # Double quote to prevent globbing
+                    'SC2181'   # Check exit code directly
+                ]
             }
         } 
