@@ -1,8 +1,43 @@
 import os
 from datetime import datetime
-from analyzers import analyze_file_content, should_ignore_file, is_binary_file
+from analyzers.code_quality_analyzer import CodeQualityAnalyzer
 from project_detector import detect_project_type, get_project_description, get_file_type_info
 from config import get_file_length_limit, load_config
+
+def analyze_file_content(file_path):
+    """Analyze a single file's content using CodeQualityAnalyzer."""
+    analyzer = CodeQualityAnalyzer(os.path.dirname(file_path))
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+        lines = content.split('\n')
+    
+    functions = []
+    for func in analyzer._find_functions(content):
+        # Calculate function length by counting newlines in the function's content
+        func_lines = func.get('content', '').count('\n') + 1
+        description = f"{func.get('name', 'Unknown')}: {func_lines} lines"
+        if len(func.get('params', [])) > analyzer.thresholds['max_params']:
+            description += f" (⚠️ {len(func.get('params', []))} parameters)"
+        functions.append((func.get('name', 'Unknown'), description))
+    
+    return functions, len(lines)
+
+def is_binary_file(file_path):
+    """Check if a file is binary."""
+    try:
+        with open(file_path, 'tr') as check_file:
+            check_file.read()
+            return False
+    except:
+        return True
+
+def should_ignore_file(filename):
+    """Check if a file should be ignored."""
+    ignore_patterns = [
+        '.git', '__pycache__', '.pyc', '.env',
+        'node_modules', '.DS_Store', '.idea', '.vscode'
+    ]
+    return any(pattern in filename for pattern in ignore_patterns)
 
 class ProjectMetrics:
     def __init__(self):
