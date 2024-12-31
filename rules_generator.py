@@ -160,6 +160,17 @@ class RulesGenerator:
             except:
                 pass
 
+        # Add shell testing framework detection
+        for root, _, files in os.walk(self.project_path):
+            for file in files:
+                if file.endswith('.sh'):
+                    with open(os.path.join(root, file), 'r') as f:
+                        content = f.read().lower()
+                        if 'bats' in content:
+                            testing_frameworks.append('bats')
+                        elif 'shunit2' in content:
+                            testing_frameworks.append('shunit2')
+                        
         return testing_frameworks if testing_frameworks else ['jest']  # Default to jest
 
     def _add_project_type_rules(self, rules: Dict[str, Any], project_type: str):
@@ -222,5 +233,67 @@ class RulesGenerator:
                     "frameworks": ["jest"],
                     "coverage_threshold": 80
                 }
+            }
+        } 
+
+    def _detect_shell_config(self) -> Dict:
+        """Detect shell script configuration and requirements."""
+        shell_config = {
+            'shell_type': 'bash',  # Default to bash
+            'requirements': [],
+            'recommended_practices': [
+                'Add shebang line (#!/bin/bash)',
+                'Make scripts executable (chmod +x)',
+                'Use set -e for error handling',
+                'Use set -u for undefined variables',
+                'Add help/usage information',
+                'Include error handling'
+            ]
+        }
+        
+        # Detect shell type from shebang
+        for root, _, files in os.walk(self.project_path):
+            for file in files:
+                if file.endswith('.sh'):
+                    try:
+                        with open(os.path.join(root, file), 'r') as f:
+                            first_line = f.readline().strip()
+                            if first_line.startswith('#!'):
+                                if 'zsh' in first_line:
+                                    shell_config['shell_type'] = 'zsh'
+                                elif 'dash' in first_line:
+                                    shell_config['shell_type'] = 'dash'
+                    except Exception:
+                        continue
+                        
+        return shell_config
+
+    def generate_shell_rules(self) -> Dict:
+        """Generate specific rules for shell scripts."""
+        return {
+            'naming_convention': {
+                'files': '*.sh',
+                'functions': 'lowercase_with_underscores'
+            },
+            'required_headers': [
+                'shebang',
+                'description',
+                'usage'
+            ],
+            'best_practices': [
+                'Use functions for reusable code',
+                'Quote variables when used',
+                'Use meaningful function and variable names',
+                'Add error handling',
+                'Include logging',
+                'Document complex commands'
+            ],
+            'linting': {
+                'recommended': 'shellcheck',
+                'rules': [
+                    'SC2034',  # Unused variables
+                    'SC2086',  # Double quote to prevent globbing
+                    'SC2181'   # Check exit code directly
+                ]
             }
         } 

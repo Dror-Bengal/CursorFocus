@@ -82,7 +82,7 @@ NON_CODE_EXTENSIONS = {
 # Extensions that should be analyzed for code
 CODE_EXTENSIONS = {
     '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.h', 
-    '.hpp', '.cs', '.go', '.rb', '.php'
+    '.hpp', '.cs', '.go', '.rb', '.php', '.sh'
 }
 
 # Regex patterns for function detection
@@ -91,7 +91,9 @@ FUNCTION_PATTERNS = {
     'arrow': r'(?:^|\s+)(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[^=])\s*=>',
     'method': r'\b(\w+)\s*:\s*(?:async\s*)?function',
     'class_method': r'(?:^|\s+)(?:async\s+)?(\w+)\s*\([^)]*\)\s*{',
-    'object_property': r'(\w+)\s*:\s*(?:\([^)]*\)|[^=])\s*=>'
+    'object_property': r'(\w+)\s*:\s*(?:\([^)]*\)|[^=])\s*=>',
+    'shell_function': r'(?:^|\s+)(\w+)\s*\(\s*\)\s*{',
+    'shell_command': r'(?:^|\s+)function\s+(\w+)\s*(?:\(\s*\))?\s*{'
 }
 
 # Keywords that should not be treated as function names

@@ -70,7 +70,8 @@ class RulesAnalyzer:
             '.java': 'java',
             '.rb': 'ruby',
             '.php': 'php',
-            '.go': 'go'
+            '.go': 'go',
+            '.sh': 'shell'
         }
 
         # Find the most common language
@@ -168,3 +169,36 @@ class RulesAnalyzer:
                 return 'web application'
 
         return 'application' 
+
+    def _analyze_shell_script(self, file_path: str) -> Dict:
+        """Analyze shell script specific rules."""
+        results = {
+            'warnings': [],
+            'suggestions': []
+        }
+        
+        try:
+            with open(file_path, 'r') as f:
+                content = f.read()
+                
+            # Check for shebang
+            if not content.startswith('#!/'):
+                results['warnings'].append('Missing shebang line')
+                results['suggestions'].append('Add #!/bin/bash or appropriate shebang')
+                
+            # Check for executable permission
+            if not os.access(file_path, os.X_OK):
+                results['warnings'].append('Script is not executable')
+                results['suggestions'].append('Run: chmod +x script.sh')
+                
+            # Check for common shell script practices
+            if 'set -e' not in content:
+                results['suggestions'].append('Consider adding "set -e" for error handling')
+                
+            if 'set -u' not in content:
+                results['suggestions'].append('Consider adding "set -u" for undefined variable checking')
+                
+        except Exception as e:
+            results['warnings'].append(f'Error analyzing shell script: {str(e)}')
+            
+        return results 
