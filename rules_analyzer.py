@@ -136,6 +136,51 @@ class RulesAnalyzer:
             except:
                 pass
 
+        # Check composer.json for PHP frameworks
+        composer_json_path = os.path.join(self.project_path, 'composer.json')
+        if os.path.exists(composer_json_path):
+            try:
+                with open(composer_json_path, 'r') as f:
+                    data = json.load(f)
+                    deps = {**data.get('require', {}), **data.get('require-dev', {})}
+                    
+                    if 'laravel/framework' in deps:
+                        return 'laravel'
+                    if 'symfony/symfony' in deps:
+                        return 'symfony'
+                    if 'cakephp/cakephp' in deps:
+                        return 'cakephp'
+            except:
+                pass
+
+        # Check Gemfile for Ruby frameworks
+        gemfile_path = os.path.join(self.project_path, 'Gemfile')
+        if os.path.exists(gemfile_path):
+            try:
+                with open(gemfile_path, 'r') as f:
+                    content = f.read().lower()
+                    if 'rails' in content:
+                        return 'rails'
+                    if 'sinatra' in content:
+                        return 'sinatra'
+            except:
+                pass
+
+        # Check go.mod for Go frameworks
+        go_mod_path = os.path.join(self.project_path, 'go.mod')
+        if os.path.exists(go_mod_path):
+            try:
+                with open(go_mod_path, 'r') as f:
+                    content = f.read().lower()
+                    if 'gin-gonic/gin' in content:
+                        return 'gin'
+                    if 'gorilla/mux' in content:
+                        return 'gorilla'
+                    if 'echo' in content:
+                        return 'echo'
+            except:
+                pass
+
         return 'none'
 
     def _detect_project_type(self) -> str:

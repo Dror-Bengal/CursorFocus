@@ -101,6 +101,41 @@ class RulesGenerator:
                 'use Flask blueprints for organization',
                 'implement proper error handling',
                 'use Flask-SQLAlchemy for database operations'
+            ],
+            'laravel': [
+                'follow Laravel conventions',
+                'use Eloquent ORM for database operations',
+                'implement proper middleware',
+                'use blade templating engine',
+                'follow MVC architecture'
+            ],
+            'symfony': [
+                'follow Symfony best practices',
+                'use Doctrine ORM',
+                'implement proper services',
+                'use Twig templating',
+                'follow SOLID principles'
+            ],
+            'rails': [
+                'follow Ruby on Rails conventions',
+                'use ActiveRecord patterns',
+                'implement proper helpers',
+                'follow RESTful routing',
+                'use asset pipeline'
+            ],
+            'gin': [
+                'use proper middleware chains',
+                'implement proper error handling',
+                'use gin.Context correctly',
+                'follow RESTful API design',
+                'proper route grouping'
+            ],
+            'echo': [
+                'use middleware effectively',
+                'implement proper error handling',
+                'use echo.Context correctly',
+                'follow RESTful API design',
+                'proper route organization'
             ]
         }
         return framework_rules.get(framework.lower(), [])
@@ -122,6 +157,27 @@ class RulesGenerator:
                 'use strict type checking',
                 'leverage type inference',
                 'use interface over type when possible'
+            ],
+            'php': [
+                'follow PSR standards',
+                'use type declarations',
+                'proper error handling',
+                'follow OOP principles',
+                'use namespaces effectively'
+            ],
+            'ruby': [
+                'follow Ruby style guide',
+                'use proper naming conventions',
+                'implement error handling',
+                'follow DRY principles',
+                'use blocks and procs effectively'
+            ],
+            'go': [
+                'follow Go style guide',
+                'use proper error handling',
+                'implement interfaces correctly',
+                'use goroutines appropriately',
+                'follow package organization conventions'
             ]
         }
         return language_rules.get(language.lower(), [])
