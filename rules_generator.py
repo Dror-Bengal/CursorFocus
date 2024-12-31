@@ -67,6 +67,16 @@ class RulesGenerator:
     def _get_framework_rules(self, framework: str) -> List[str]:
         """Get framework-specific coding rules."""
         framework_rules = {
+            'bun': [
+                'use Bun.serve() for HTTP servers',
+                'leverage Bun.file API for file operations',
+                'use Bun.write for file writing',
+                'prefer .env over config files',
+                'use Bun.password APIs for crypto',
+                'configure project via bunfig.toml',
+                'use bunx for script execution',
+                'use binary lockfile (bun.lockb) for better performance'
+            ],
             'react': [
                 'use functional components over class components',
                 'prefer hooks for state management',

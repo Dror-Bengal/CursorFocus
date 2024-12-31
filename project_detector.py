@@ -8,6 +8,15 @@ PROJECT_TYPES = _config.get('project_types', {})
 
 def detect_project_type(project_path):
     """Detect project type based on file presence using configurable rules."""
+    # Add Bun project detection
+    bun_indicators = [
+        os.path.join(project_path, 'bunfig.toml'),
+        os.path.join(project_path, 'bun.toml'),
+        os.path.join(project_path, 'bun.lockb')
+    ]
+    if any(os.path.exists(path) for path in bun_indicators):
+        return 'bun'
+        
     for project_type, rules in PROJECT_TYPES.items():
         # Check for indicator files
         if any(os.path.exists(os.path.join(project_path, f)) for f in rules.get('indicators', [])):
@@ -27,7 +36,7 @@ def scan_for_projects(root_path, max_depth=3, ignored_dirs=None):
     projects = []
     root_path = os.path.abspath(root_path or '.')
     
-    # Kiểm tra thư mục gốc trước
+    # Check root directory first
     project_type = detect_project_type(root_path)
     if project_type != 'generic':
         projects.append({
@@ -49,7 +58,7 @@ def scan_for_projects(root_path, max_depth=3, ignored_dirs=None):
             for item in os.listdir(current_path):
                 item_path = os.path.join(current_path, item)
                 if os.path.isdir(item_path):
-                    # Kiểm tra từng thư mục con
+                    # Check each subdirectory
                     project_type = detect_project_type(item_path)
                     if project_type != 'generic':
                         projects.append({
@@ -58,14 +67,14 @@ def scan_for_projects(root_path, max_depth=3, ignored_dirs=None):
                             'name': item
                         })
                     else:
-                        # Nếu không phải project thì quét tiếp
+                        # If not a project, scan further
                         _scan_directory(item_path, current_depth + 1)
                     
         except (PermissionError, OSError):
             # Skip directories we can't access
             pass
     
-    # Bắt đầu quét từ thư mục gốc
+    # Start scanning from root directory
     _scan_directory(root_path, 0)
     return projects
 

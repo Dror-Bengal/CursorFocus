@@ -3,7 +3,13 @@ import os
 import json
 import argparse
 import logging
+import sys
 from project_detector import scan_for_projects
+from analyzers.dependency_analyzer import DependencyAnalyzer
+from analyzers.git_analyzer import GitAnalyzer
+
+# Add current directory to PYTHONPATH
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 def create_launch_agent(project_path, python_path='/usr/local/bin/python3'):
     """Create and install the LaunchAgent plist file."""
@@ -67,6 +73,14 @@ def setup_cursorfocus():
                        help='Scan directory for projects. If no path provided, scans current directory')
     parser.add_argument('--scan-depth', type=int, default=3, help='Maximum depth for project scanning')
     parser.add_argument('--auto-add', '-a', action='store_true', help='Automatically add all found projects')
+    parser.add_argument('--analyze-deps', '-D', action='store_true', 
+                       help='Analyze project dependencies')
+    parser.add_argument('--analyze-git', '-G', action='store_true',
+                       help='Analyze Git repository')
+    parser.add_argument('--output-dir', '-o', default='reports', help='Directory for analysis reports')
+    parser.add_argument('--analyze-quality', '-Q', action='store_true', help='Analyze code quality')
+    parser.add_argument('--analyze-api', '-A', action='store_true',
+                       help='Analyze API documentation')
     
     args = parser.parse_args()
     
@@ -245,6 +259,57 @@ def setup_cursorfocus():
     
     print("\nTo start monitoring all projects, run:")
     print(f"python3 {os.path.join(script_dir, 'focus.py')}")
+
+    # Process analysis if requested
+    if args.analyze_deps or args.analyze_git or args.analyze_api:
+        for project in config['projects']:
+            project_path = project['project_path']
+            
+            # Create reports directory if it doesn't exist
+            reports_dir = os.path.join(project_path, args.output_dir)
+            os.makedirs(reports_dir, exist_ok=True)
+            
+            if args.analyze_deps:
+                print(f"\n📦 Analyzing dependencies for {project['name']}...")
+                try:
+                    dep_analyzer = DependencyAnalyzer(project_path)
+                    dep_report = dep_analyzer.generate_report()
+                    
+                    report_path = os.path.join(reports_dir, 'dependencies.md')
+                    # Add encoding='utf-8' when writing file
+                    with open(report_path, 'w', encoding='utf-8') as f:
+                        f.write(dep_report)
+                    print(f"✅ Dependencies report saved to: {report_path}")
+                except Exception as e:
+                    print(f"❌ Error analyzing dependencies: {str(e)}")
+                
+            if args.analyze_git:
+                print(f"\n🔍 Analyzing Git repository for {project['name']}...")
+                try:
+                    git_analyzer = GitAnalyzer(project_path)
+                    git_report = git_analyzer.generate_report()
+                    
+                    report_path = os.path.join(reports_dir, 'git_analysis.md')
+                    # Add encoding='utf-8' when writing file
+                    with open(report_path, 'w', encoding='utf-8') as f:
+                        f.write(git_report)
+                    print(f"✅ Git analysis report saved to: {report_path}")
+                except Exception as e:
+                    print(f"❌ Error analyzing git repository: {str(e)}")
+            
+            if args.analyze_api:
+                print(f"\n📝 Analyzing API documentation for {project['name']}...")
+                try:
+                    from analyzers.api_doc_analyzer import APIDocAnalyzer
+                    api_analyzer = APIDocAnalyzer(project_path)
+                    api_report = api_analyzer.generate_report()
+                    
+                    report_path = os.path.join(reports_dir, 'api_documentation.md')
+                    with open(report_path, 'w', encoding='utf-8') as f:
+                        f.write(api_report)
+                    print(f"✅ API documentation report saved to: {report_path}")
+                except Exception as e:
+                    print(f"❌ Error analyzing API documentation: {str(e)}")
 
 def load_or_create_config(config_path):
     """Load existing config or create default one."""
