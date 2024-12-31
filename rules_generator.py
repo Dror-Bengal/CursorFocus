@@ -136,6 +136,34 @@ class RulesGenerator:
                 'use echo.Context correctly',
                 'follow RESTful API design',
                 'proper route organization'
+            ],
+            'qt': [
+                'follow Qt naming conventions',
+                'use Qt smart pointers',
+                'implement proper signal/slot connections',
+                'use Qt resource system',
+                'follow Qt memory management guidelines'
+            ],
+            'boost': [
+                'use Boost smart pointers appropriately',
+                'leverage Boost libraries effectively',
+                'follow Boost conventions',
+                'implement proper error handling',
+                'use Boost testing framework'
+            ],
+            'aspnet_core': [
+                'follow ASP.NET Core conventions',
+                'use dependency injection',
+                'implement proper middleware',
+                'follow MVC/Razor Pages patterns',
+                'use Entity Framework Core properly'
+            ],
+            'maui': [
+                'follow .NET MAUI guidelines',
+                'implement MVVM pattern',
+                'use platform-specific features appropriately',
+                'follow XAML best practices',
+                'proper resource management'
             ]
         }
         return framework_rules.get(framework.lower(), [])
@@ -178,6 +206,24 @@ class RulesGenerator:
                 'implement interfaces correctly',
                 'use goroutines appropriately',
                 'follow package organization conventions'
+            ],
+            'cpp': [
+                'follow modern C++ guidelines',
+                'use RAII principles',
+                'prefer smart pointers over raw pointers',
+                'follow const correctness',
+                'use STL algorithms when appropriate',
+                'implement proper memory management',
+                'use references over pointers when possible'
+            ],
+            'csharp': [
+                'follow C# coding conventions',
+                'use proper access modifiers',
+                'implement IDisposable when needed',
+                'use async/await properly',
+                'follow LINQ best practices',
+                'use properties over public fields',
+                'implement proper exception handling'
             ]
         }
         return language_rules.get(language.lower(), [])

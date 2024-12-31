@@ -71,7 +71,13 @@ class RulesAnalyzer:
             '.rb': 'ruby',
             '.php': 'php',
             '.go': 'go',
-            '.sh': 'shell'
+            '.sh': 'shell',
+            '.cpp': 'cpp',
+            '.hpp': 'cpp',
+            '.h': 'cpp',
+            '.cc': 'cpp',
+            '.cs': 'csharp',
+            '.csproj': 'csharp'
         }
 
         # Find the most common language
@@ -178,6 +184,43 @@ class RulesAnalyzer:
                         return 'gorilla'
                     if 'echo' in content:
                         return 'echo'
+            except:
+                pass
+
+        # Check for C++ frameworks
+        cmake_path = os.path.join(self.project_path, 'CMakeLists.txt')
+        if os.path.exists(cmake_path):
+            try:
+                with open(cmake_path, 'r') as f:
+                    content = f.read().lower()
+                    if 'qt' in content:
+                        return 'qt'
+                    if 'boost' in content:
+                        return 'boost'
+                    if 'opencv' in content:
+                        return 'opencv'
+            except:
+                pass
+
+        # Check for C# frameworks
+        csproj_files = []
+        for root, _, files in os.walk(self.project_path):
+            for file in files:
+                if file.endswith('.csproj'):
+                    csproj_files.append(os.path.join(root, file))
+
+        for csproj in csproj_files:
+            try:
+                with open(csproj, 'r') as f:
+                    content = f.read().lower()
+                    if 'microsoft.aspnetcore' in content:
+                        return 'aspnet_core'
+                    if 'microsoft.net.sdk.web' in content:
+                        return 'aspnet_core'
+                    if 'xamarin' in content:
+                        return 'xamarin'
+                    if 'microsoft.maui' in content:
+                        return 'maui'
             except:
                 pass
 
