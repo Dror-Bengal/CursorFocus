@@ -118,6 +118,23 @@ def generate_focus_content(project_path, config):
                     metrics.alerts[alert_level] += 1
                     content.append(f"**{alert_message} ({line_count} lines vs. recommended {length_limit})**")
     
+    # Add API documentation section if available
+    try:
+        from analyzers.api_doc_analyzer import APIDocAnalyzer
+        api_analyzer = APIDocAnalyzer(project_path)
+        api_data = api_analyzer.analyze()
+        
+        if api_data['total_endpoints'] > 0:
+            content.extend([
+                "\n## 🔌 API Overview",
+                f"- Total Endpoints: {api_data['total_endpoints']}",
+                f"- Documentation Coverage: {api_data['coverage']['coverage_ratio']*100:.1f}%",
+                f"- Documented Endpoints: {api_data['coverage']['documented']}",
+                f"- Undocumented Endpoints: {api_data['coverage']['undocumented']}"
+            ])
+    except:
+        pass
+    
     # Add metrics summary
     content.extend([
         "",

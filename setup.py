@@ -77,8 +77,10 @@ def setup_cursorfocus():
                        help='Analyze project dependencies')
     parser.add_argument('--analyze-git', '-G', action='store_true',
                        help='Analyze Git repository')
-    parser.add_argument('--output-dir', '-o', default='reports',
-                       help='Directory for analysis reports')
+    parser.add_argument('--output-dir', '-o', default='reports', help='Directory for analysis reports')
+    parser.add_argument('--analyze-quality', '-Q', action='store_true', help='Analyze code quality')
+    parser.add_argument('--analyze-api', '-A', action='store_true',
+                       help='Analyze API documentation')
     
     args = parser.parse_args()
     
@@ -259,7 +261,7 @@ def setup_cursorfocus():
     print(f"python3 {os.path.join(script_dir, 'focus.py')}")
 
     # Process analysis if requested
-    if args.analyze_deps or args.analyze_git:
+    if args.analyze_deps or args.analyze_git or args.analyze_api:
         for project in config['projects']:
             project_path = project['project_path']
             
@@ -294,6 +296,20 @@ def setup_cursorfocus():
                     print(f"✅ Git analysis report saved to: {report_path}")
                 except Exception as e:
                     print(f"❌ Error analyzing git repository: {str(e)}")
+            
+            if args.analyze_api:
+                print(f"\n📝 Analyzing API documentation for {project['name']}...")
+                try:
+                    from analyzers.api_doc_analyzer import APIDocAnalyzer
+                    api_analyzer = APIDocAnalyzer(project_path)
+                    api_report = api_analyzer.generate_report()
+                    
+                    report_path = os.path.join(reports_dir, 'api_documentation.md')
+                    with open(report_path, 'w', encoding='utf-8') as f:
+                        f.write(api_report)
+                    print(f"✅ API documentation report saved to: {report_path}")
+                except Exception as e:
+                    print(f"❌ Error analyzing API documentation: {str(e)}")
 
 def load_or_create_config(config_path):
     """Load existing config or create default one."""
