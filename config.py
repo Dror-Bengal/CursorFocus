@@ -82,9 +82,28 @@ NON_CODE_EXTENSIONS = {
 # Extensions that should be analyzed for code
 CODE_EXTENSIONS = {
     '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.h', 
-    '.hpp', '.cs', '.go', '.rb', '.php', '.phtml', '.phps', 
-    # Add C++ and C# extensions
-    '.cc', '.cxx', '.cp', '.c++', '.cshtml', '.csx'
+    '.hpp', '.cs', '.go', '.rb', '.php', '.phtml', '.phps',
+    '.cc', '.cxx', '.cp', '.c++', '.cshtml', '.csx',
+    # Rust
+    '.rs', '.rlib',
+    # Swift
+    '.swift', '.swiftmodule',
+    # Kotlin
+    '.kt', '.kts',
+    # Dart
+    '.dart',
+    # Scala
+    '.scala', '.sc',
+    # R
+    '.r', '.R', '.Rmd',
+    # MATLAB
+    '.m', '.mat',
+    # Lua
+    '.lua',
+    # Perl
+    '.pl', '.pm', '.t',
+    # Objective-C
+    '.m', '.mm'
 }
 
 # Regex patterns for function detection
@@ -104,7 +123,43 @@ FUNCTION_PATTERNS = {
     # Add C# patterns  
     'csharp_method': r'(?:public|private|protected|internal|static|virtual|override|abstract|async)*\s+(?:\w+\s+)?(\w+)\s*\([^)]*\)\s*(?:where\s+[^{]+)?(?=\s*\{|;)',
     'csharp_property': r'(?:public|private|protected|internal)\s+(?:\w+\s+)?(\w+)\s*\{[^}]*\}',
-    'csharp_event': r'(?:public|private|protected|internal)\s+event\s+\w+\s+(\w+)\s*;'
+    'csharp_event': r'(?:public|private|protected|internal)\s+event\s+\w+\s+(\w+)\s*;',
+    
+    # Rust patterns
+    'rust_function': r'fn\s+(\w+)\s*(?:<[^>]+>)?\s*\([^)]*\)\s*(?:->\s*[^{]+)?\s*\{',
+    'rust_method': r'impl\s+(?:[^{]+\s+)?for\s+[^{]+\{\s*(?:pub\s+)?fn\s+(\w+)',
+    
+    # Swift patterns
+    'swift_function': r'func\s+(\w+)\s*(?:<[^>]+>)?\s*\([^)]*\)\s*(?:->\s*[^{]+)?\s*\{',
+    'swift_method': r'(?:override\s+)?func\s+(\w+)',
+    
+    # Kotlin patterns
+    'kotlin_function': r'fun\s+(\w+)\s*(?:<[^>]+>)?\s*\([^)]*\)\s*(?::\s*[^{]+)?\s*\{',
+    'kotlin_method': r'(?:override\s+)?fun\s+(\w+)',
+    
+    # Dart patterns
+    'dart_function': r'(?:void\s+)?(\w+)\s*\([^)]*\)\s*(?:async\s*)?\{',
+    'dart_method': r'(?:@override\s+)?(?:void\s+)?(\w+)\s*\([^)]*\)\s*(?:async\s*)?\{',
+    
+    # Scala patterns
+    'scala_function': r'def\s+(\w+)\s*(?:\[[^\]]+\])?\s*(?:\([^)]*\))?\s*(?::\s*[^=]+)?\s*=',
+    'scala_method': r'(?:override\s+)?def\s+(\w+)',
+    
+    # R patterns
+    'r_function': r'(\w+)\s*<-\s*function\s*\(',
+    
+    # MATLAB patterns
+    'matlab_function': r'function\s+(?:\[?[^]]*\]?\s*=\s*)?(\w+)\s*\(',
+    
+    # Lua patterns
+    'lua_function': r'function\s+(\w+)\s*\(',
+    'lua_method': r'function\s+\w+[:.]\s*(\w+)\s*\(',
+    
+    # Perl patterns
+    'perl_sub': r'sub\s+(\w+)\s*\{',
+    
+    # Objective-C patterns
+    'objc_method': r'[-+]\s*\([^)]+\)\s*(\w+)\s*[:{]'
 }
 
 # Keywords that should not be treated as function names
