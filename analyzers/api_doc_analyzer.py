@@ -2,10 +2,11 @@ import re
 import os
 from typing import Dict, List, Optional
 from collections import defaultdict
+from .base_analyzer import BaseAnalyzer
 
-class APIDocAnalyzer:
+class APIDocAnalyzer(BaseAnalyzer):
     def __init__(self, project_path: str):
-        self.project_path = project_path
+        super().__init__(project_path)
         self.api_patterns = {
             'rest': r'@api\s+{([^}]+)}\s+([^\n]+)',
             'method': r'@method\s+(\w+)',
@@ -18,6 +19,14 @@ class APIDocAnalyzer:
 
     def analyze(self) -> Dict:
         """Analyze API documentation in the project."""
+        return self.safe_execute(
+            self._analyze_api_docs,
+            "Error analyzing API documentation",
+            self._get_empty_analysis()
+        )
+
+    def _analyze_api_docs(self) -> Dict:
+        """Internal method to analyze API documentation."""
         api_docs = {
             'endpoints': [],
             'models': defaultdict(dict),
@@ -34,22 +43,7 @@ class APIDocAnalyzer:
             for file in files:
                 if file.endswith(('.js', '.ts', '.py')):
                     file_path = os.path.join(root, file)
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                        
-                    # Extract API documentation
-                    endpoints = self._extract_endpoints(content)
-                    if endpoints:
-                        rel_path = os.path.relpath(file_path, self.project_path)
-                        for endpoint in endpoints:
-                            endpoint['file'] = rel_path
-                            api_docs['endpoints'].append(endpoint)
-                            api_docs['total_endpoints'] += 1
-                            
-                            if endpoint.get('documented', False):
-                                api_docs['coverage']['documented'] += 1
-                            else:
-                                api_docs['coverage']['undocumented'] += 1
+                    self._analyze_file(file_path, api_docs)
 
         # Calculate coverage ratio
         total = api_docs['coverage']['documented'] + api_docs['coverage']['undocumented']
@@ -58,6 +52,42 @@ class APIDocAnalyzer:
         )
 
         return api_docs
+
+    def _analyze_file(self, file_path: str, api_docs: Dict) -> None:
+        """Analyze a single file for API documentation."""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+            # Extract API documentation
+            endpoints = self._extract_endpoints(content)
+            if endpoints:
+                rel_path = os.path.relpath(file_path, self.project_path)
+                for endpoint in endpoints:
+                    endpoint['file'] = rel_path
+                    api_docs['endpoints'].append(endpoint)
+                    api_docs['total_endpoints'] += 1
+                    
+                    if endpoint.get('documented', False):
+                        api_docs['coverage']['documented'] += 1
+                    else:
+                        api_docs['coverage']['undocumented'] += 1
+        except Exception as e:
+            self.logger.warning(f"Error analyzing file {file_path}: {str(e)}")
+
+    def _get_empty_analysis(self) -> Dict:
+        """Return empty analysis structure when analysis fails."""
+        return {
+            'endpoints': [],
+            'models': defaultdict(dict),
+            'services': defaultdict(list),
+            'total_endpoints': 0,
+            'coverage': {
+                'documented': 0,
+                'undocumented': 0,
+                'coverage_ratio': 0
+            }
+        }
 
     def _extract_endpoints(self, content: str) -> List[Dict]:
         """Extract API endpoint documentation."""

@@ -4,10 +4,11 @@ import subprocess
 import logging
 from typing import Dict, List, Tuple
 from collections import defaultdict
+from .base_analyzer import BaseAnalyzer
 
-class DependencyAnalyzer:
+class DependencyAnalyzer(BaseAnalyzer):
     def __init__(self, project_path: str):
-        self.project_path = project_path
+        super().__init__(project_path)
         self.dependency_files = {
             'python': ['requirements.txt', 'Pipfile', 'pyproject.toml', 'setup.py'],
             'node': ['package.json', 'yarn.lock', 'package-lock.json'],
@@ -17,39 +18,40 @@ class DependencyAnalyzer:
 
     def analyze(self) -> Dict:
         """Analyze project dependencies."""
-        try:
-            dependencies = {
-                'direct': defaultdict(list),
-                'dev': defaultdict(list),
-                'outdated': [],
-                'security_alerts': [],
-                'stats': {
-                    'total_dependencies': 0,
-                    'direct_dependencies': 0,
-                    'dev_dependencies': 0,
-                    'outdated_count': 0
-                }
+        return self.safe_execute(
+            self._analyze_dependencies,
+            "Error analyzing dependencies",
+            self._get_empty_analysis()
+        )
+
+    def _analyze_dependencies(self) -> Dict:
+        """Internal method to analyze dependencies."""
+        dependencies = {
+            'direct': defaultdict(list),
+            'dev': defaultdict(list),
+            'outdated': [],
+            'security_alerts': [],
+            'stats': {
+                'total_dependencies': 0,
+                'direct_dependencies': 0,
+                'dev_dependencies': 0,
+                'outdated_count': 0
             }
+        }
 
-            # Detect project type and analyze dependencies
-            for lang, files in self.dependency_files.items():
-                for file in files:
-                    file_path = os.path.join(self.project_path, file)
-                    if os.path.exists(file_path):
-                        self._analyze_dependency_file(file_path, lang, dependencies)
-                        break  # Only analyze first found dependency file per language
+        # Analyze each dependency file
+        for lang, files in self.dependency_files.items():
+            for file in files:
+                file_path = os.path.join(self.project_path, file)
+                if os.path.exists(file_path):
+                    self._analyze_dependency_file(file_path, lang, dependencies)
+                    break
 
-            # Check for outdated dependencies
-            self._check_outdated_dependencies(dependencies)
-            
-            # Check for security vulnerabilities
-            self._check_security_vulnerabilities(dependencies)
+        # Check for outdated dependencies and security vulnerabilities
+        self._check_outdated_dependencies(dependencies)
+        self._check_security_vulnerabilities(dependencies)
 
-            return dependencies
-
-        except Exception as e:
-            logging.error(f"Error analyzing dependencies: {str(e)}")
-            return self._get_empty_analysis()
+        return dependencies
 
     def _analyze_dependency_file(self, file_path: str, lang: str, dependencies: Dict) -> None:
         """Analyze a specific dependency file."""
@@ -131,21 +133,6 @@ class DependencyAnalyzer:
 
         except Exception as e:
             logging.warning(f"Error checking security vulnerabilities: {str(e)}")
-
-    def _get_empty_analysis(self) -> Dict:
-        """Return empty analysis structure when analysis fails."""
-        return {
-            'direct': defaultdict(list),
-            'dev': defaultdict(list),
-            'outdated': [],
-            'security_alerts': [],
-            'stats': {
-                'total_dependencies': 0,
-                'direct_dependencies': 0,
-                'dev_dependencies': 0,
-                'outdated_count': 0
-            }
-        } 
 
     def generate_report(self) -> str:
         """Generate a Markdown report about dependencies."""

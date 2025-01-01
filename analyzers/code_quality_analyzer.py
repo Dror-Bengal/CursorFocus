@@ -4,10 +4,11 @@ import math
 from typing import Dict, List, Tuple
 from collections import defaultdict
 import logging
+from .base_analyzer import BaseAnalyzer
 
-class CodeQualityAnalyzer:
+class CodeQualityAnalyzer(BaseAnalyzer):
     def __init__(self, project_path: str):
-        self.project_path = project_path
+        super().__init__(project_path)
         self.thresholds = {
             'function_length': 30,
             'file_length': 300,
@@ -21,13 +22,17 @@ class CodeQualityAnalyzer:
         }
         
     def analyze(self) -> Dict:
-        """Analyze code quality of the project."""
-        return {
-            'complexity': self._analyze_complexity(),
-            'maintainability': self._analyze_maintainability(),
-            'code_smells': self._detect_code_smells(),
-            'best_practices': self._check_best_practices()
-        }
+        """Analyze code quality metrics."""
+        return self.safe_execute(
+            lambda: {
+                'complexity': self._analyze_complexity(),
+                'maintainability': self._analyze_maintainability(),
+                'code_smells': self._detect_code_smells(),
+                'best_practices': self._check_best_practices()
+            },
+            "Error analyzing code quality",
+            self._get_empty_analysis()
+        )
         
     def _analyze_complexity(self) -> Dict:
         """Analyze code complexity."""

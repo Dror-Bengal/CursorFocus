@@ -4,10 +4,11 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from collections import defaultdict
+from .base_analyzer import BaseAnalyzer
 
-class GitAnalyzer:
+class GitAnalyzer(BaseAnalyzer):
     def __init__(self, project_path: str):
-        self.project_path = project_path
+        super().__init__(project_path)
         self._validate_git_repo()
 
     def _validate_git_repo(self) -> None:
@@ -17,35 +18,30 @@ class GitAnalyzer:
 
     def analyze(self) -> Dict:
         """Analyze Git repository metrics."""
-        try:
-            return {
+        return self.safe_execute(
+            lambda: {
                 'commit_history': self._analyze_commit_history(),
                 'code_churn': self._analyze_code_churn(),
                 'contributor_stats': self._analyze_contributors(),
                 'branch_stats': self._analyze_branches(),
                 'hotspots': self._identify_hotspots()
-            }
-        except Exception as e:
-            logging.error(f"Error analyzing git repository: {str(e)}")
-            return self._get_empty_analysis()
+            },
+            "Error analyzing git repository",
+            self._get_empty_analysis()
+        )
 
     def _run_git_command(self, args: List[str]) -> str:
-        """Run a git command and return its output."""
-        try:
-            result = subprocess.run(
+        """Run a git command safely."""
+        return self.safe_execute(
+            lambda: subprocess.run(
                 ['git'] + args,
                 capture_output=True,
                 text=True,
                 cwd=self.project_path
-            )
-            if result.returncode == 0:
-                return result.stdout.strip()
-            else:
-                logging.warning(f"Git command failed: {result.stderr}")
-                return ""
-        except Exception as e:
-            logging.error(f"Error running git command: {str(e)}")
-            return ""
+            ).stdout.strip(),
+            f"Error running git command: {' '.join(args)}",
+            ""
+        )
 
     def _analyze_commit_history(self) -> Dict:
         """Analyze commit history patterns."""
