@@ -3,6 +3,7 @@ import re
 import math
 from typing import Dict, List, Tuple
 from collections import defaultdict
+import logging
 
 class CodeQualityAnalyzer:
     def __init__(self, project_path: str):
@@ -484,16 +485,21 @@ class CodeQualityAnalyzer:
                                        cyclomatic: int, loc: int, 
                                        comment_ratio: float) -> float:
         """Calculate maintainability index."""
-        # Standard maintainability index formula
-        mi = 171 - 5.2 * math.log(halstead_volume) - 0.23 * cyclomatic - 16.2 * math.log(loc)
-        
-        # Add comment weight
-        mi += 50 * math.sin(math.sqrt(2.4 * comment_ratio))
-        
-        # Normalize to 0-100 scale
-        mi = max(0, min(100, mi))
-        
-        return mi
+        # Calculate base maintainability index using standard formula
+        # MI = 171 - 5.2 * ln(HV) - 0.23 * CC - 16.2 * ln(LOC)
+        try:
+            mi = 171 - 5.2 * math.log(halstead_volume + 1) - 0.23 * cyclomatic - 16.2 * math.log(loc + 1)
+            
+            # Add comment weight
+            mi += 50 * math.sin(math.sqrt(2.4 * comment_ratio))
+            
+            # Normalize to 0-100 scale
+            mi = max(0, min(100, mi))
+            
+            return mi
+        except Exception as e:
+            logging.warning(f"Error calculating maintainability index: {str(e)}")
+            return 50.0  # Return default value if calculation fails
 
     def _get_maintainability_rating(self, score: float) -> str:
         """Get rating based on maintainability score."""
@@ -529,34 +535,43 @@ class CodeQualityAnalyzer:
         # Complexity suggestions
         if data['complexity']['complexity_distribution']['high'] + \
            data['complexity']['complexity_distribution']['very_high'] > 0:
-            suggestions['Complexity'].append(
-                "Consider breaking down complex functions into smaller, more manageable pieces"
-            )
+            suggestions['Complexity'].extend([
+                "Consider breaking down complex functions into smaller, more manageable pieces",
+                "Look for opportunities to simplify conditional logic",
+                "Consider extracting complex calculations into separate utility functions"
+            ])
             
         # Documentation suggestions
         comment_ratio = data['maintainability']['metrics']['comment_ratio']
         if comment_ratio < self.thresholds['min_comment_ratio']:
-            suggestions['Documentation'].append(
-                f"Increase code documentation (current comment ratio: {comment_ratio*100:.1f}%)"
-            )
+            suggestions['Documentation'].extend([
+                f"Increase code documentation (current comment ratio: {comment_ratio*100:.1f}%)",
+                "Add descriptive comments for complex logic",
+                "Consider adding more function/method documentation"
+            ])
             
         # Function length suggestions
         if data['maintainability']['metrics']['functions_over_30_lines'] > 0:
-            suggestions['Code Organization'].append(
-                "Refactor long functions to improve readability and maintainability"
-            )
+            suggestions['Code Organization'].extend([
+                "Refactor long functions to improve readability and maintainability",
+                "Consider extracting repeated code into helper functions",
+                "Break down large functions into smaller, focused functions"
+            ])
             
         # File length suggestions
         if data['maintainability']['metrics']['files_over_300_lines'] > 0:
-            suggestions['Code Organization'].append(
-                "Consider splitting large files into smaller modules"
-            )
+            suggestions['Code Organization'].extend([
+                "Consider splitting large files into smaller modules",
+                "Look for opportunities to create new classes/modules",
+                "Group related functionality into separate files"
+            ])
             
         # Best practices
         if data['code_smells']:
             suggestions['Best Practices'].extend([
                 "Address identified code smells to improve code quality",
-                "Review and refactor functions with too many parameters"
+                "Review and refactor duplicate code",
+                "Consider implementing design patterns to improve code structure"
             ])
             
         return suggestions 

@@ -1,96 +1,108 @@
 import os
 import subprocess
-from datetime import datetime, timedelta
-from typing import List, Dict
+import logging
+from datetime import datetime
+from typing import Dict, List, Optional
 from collections import defaultdict
 
 class GitAnalyzer:
     def __init__(self, project_path: str):
         self.project_path = project_path
-        
-    def _is_git_repo(self) -> bool:
-        """Check if it's a Git repository."""
-        return os.path.exists(os.path.join(self.project_path, '.git'))
-        
-    def analyze(self) -> Dict:
-        """Analyze Git repository."""
-        if not self._is_git_repo():
-            return {'error': 'Not a Git repository'}
-            
-        return {
-            'commit_frequency': self._analyze_commit_frequency(),
-            'code_churn': self._analyze_code_churn(),
-            'authors': self._analyze_authors(),
-            'branches': self._analyze_branches()
-        }
+        self._validate_git_repo()
 
-    def _run_git_command(self, command: List[str]) -> str:
-        """Run Git command and return output."""
+    def _validate_git_repo(self) -> None:
+        """Validate that the project path contains a Git repository."""
+        if not os.path.exists(os.path.join(self.project_path, '.git')):
+            raise ValueError(f"No Git repository found in {self.project_path}")
+
+    def analyze(self) -> Dict:
+        """Analyze Git repository metrics."""
+        try:
+            return {
+                'commit_history': self._analyze_commit_history(),
+                'code_churn': self._analyze_code_churn(),
+                'contributor_stats': self._analyze_contributors(),
+                'branch_stats': self._analyze_branches(),
+                'hotspots': self._identify_hotspots()
+            }
+        except Exception as e:
+            logging.error(f"Error analyzing git repository: {str(e)}")
+            return self._get_empty_analysis()
+
+    def _run_git_command(self, args: List[str]) -> str:
+        """Run a git command and return its output."""
         try:
             result = subprocess.run(
-                ['git'] + command,
-                cwd=self.project_path,
+                ['git'] + args,
                 capture_output=True,
                 text=True,
-                encoding='utf-8',
-                errors='ignore',
-                check=False
+                cwd=self.project_path
             )
-            return result.stdout.strip() if result.returncode == 0 else ''
+            if result.returncode == 0:
+                return result.stdout.strip()
+            else:
+                logging.warning(f"Git command failed: {result.stderr}")
+                return ""
         except Exception as e:
-            print(f"⚠️ Warning: Git command failed: {str(e)}")
-            return ''
+            logging.error(f"Error running git command: {str(e)}")
+            return ""
 
-    def _analyze_commit_frequency(self) -> Dict:
-        """Analyze commit frequency."""
-        frequency = {
-            'daily': defaultdict(int),
-            'weekly': defaultdict(int),
-            'monthly': defaultdict(int),
-            'total': 0
+    def _analyze_commit_history(self) -> Dict:
+        """Analyze commit history patterns."""
+        history = {
+            'total_commits': 0,
+            'commit_frequency': defaultdict(int),
+            'commit_times': defaultdict(int),
+            'recent_activity': [],
+            'largest_commits': []
         }
-        
+
+        # Get commit history
         log = self._run_git_command([
-            'log', '--format=%ai'  # ISO 8601 format
+            'log', '--pretty=format:%h|%an|%at|%s', '--shortstat'
         ])
-        
+
+        current_commit = None
         for line in log.split('\n'):
-            if not line: continue
-            date = datetime.strptime(line.split()[0], '%Y-%m-%d')
-            
-            # Daily
-            day_key = date.strftime('%Y-%m-%d')
-            frequency['daily'][day_key] += 1
-            
-            # Weekly
-            week_key = f"{date.year}-W{date.strftime('%V')}"
-            frequency['weekly'][week_key] += 1
-            
-            # Monthly
-            month_key = date.strftime('%Y-%m')
-            frequency['monthly'][month_key] += 1
-            
-            frequency['total'] += 1
-            
-        # Convert defaultdict to dict for JSON serialization
-        return {
-            'daily': dict(frequency['daily']),
-            'weekly': dict(frequency['weekly']),
-            'monthly': dict(frequency['monthly']),
-            'total': frequency['total']
-        }
+            if '|' in line:  # Commit info line
+                hash, author, timestamp, message = line.split('|')
+                date = datetime.fromtimestamp(int(timestamp))
+                
+                history['total_commits'] += 1
+                history['commit_frequency'][date.strftime('%Y-%m')] += 1
+                history['commit_times'][date.strftime('%H')] += 1
+                
+                current_commit = {
+                    'hash': hash,
+                    'author': author,
+                    'message': message,
+                    'date': date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'changes': 0
+                }
+            elif line.strip():  # Changes line
+                changes = sum(int(s.split()[0]) for s in line.split(',') if s.strip())
+                if current_commit:
+                    current_commit['changes'] = changes
+                    history['largest_commits'].append(current_commit.copy())
+
+        # Sort and limit largest commits
+        history['largest_commits'].sort(key=lambda x: x['changes'], reverse=True)
+        history['largest_commits'] = history['largest_commits'][:10]
+
+        return history
 
     def _analyze_code_churn(self) -> Dict:
-        """Analyze code churn."""
+        """Analyze code churn metrics."""
         churn = {
             'total_additions': 0,
             'total_deletions': 0,
             'by_author': defaultdict(lambda: {'additions': 0, 'deletions': 0}),
-            'by_file': defaultdict(lambda: {'additions': 0, 'deletions': 0})
+            'by_file': defaultdict(lambda: {'additions': 0, 'deletions': 0}),
+            'churn_rate': defaultdict(float)
         }
         
         log = self._run_git_command([
-            'log', '--numstat', '--format=commit %an'  # Numstat format with author
+            'log', '--numstat', '--format=commit %an'
         ])
         
         current_author = ''
@@ -111,180 +123,228 @@ class GitAnalyzer:
                         
                         churn['by_file'][file]['additions'] += adds
                         churn['by_file'][file]['deletions'] += dels
+                        
+                        # Calculate churn rate (changes per commit)
+                        total_changes = adds + dels
+                        if total_changes > 0:
+                            churn['churn_rate'][file] = total_changes
                 except:
                     continue
-                    
-        return {
-            'total_additions': churn['total_additions'],
-            'total_deletions': churn['total_deletions'],
-            'by_author': dict(churn['by_author']),
-            'by_file': dict(churn['by_file'])
+
+        return churn
+
+    def _analyze_contributors(self) -> Dict:
+        """Analyze contributor statistics."""
+        stats = {
+            'total_contributors': 0,
+            'contributions_by_author': defaultdict(int),
+            'active_days_by_author': defaultdict(set),
+            'expertise_by_file': defaultdict(lambda: defaultdict(int))
         }
 
-    def _analyze_authors(self) -> Dict:
-        """Analyze author information."""
-        authors = defaultdict(lambda: {
-            'commits': 0,
-            'first_commit': None,
-            'last_commit': None,
-            'files_changed': 0,
-            'lines_changed': 0
-        })
-        
-        # Get commit info
         log = self._run_git_command([
-            'log', '--format=%an|%at|%H'  # author, timestamp, hash
+            'log', '--pretty=format:%an|%at', '--numstat'
         ])
-        
-        for line in log.split('\n'):
-            if not line: continue
-            author, timestamp, commit_hash = line.split('|')
-            commit_time = datetime.fromtimestamp(int(timestamp))
-            
-            authors[author]['commits'] += 1
-            
-            if not authors[author]['first_commit'] or commit_time < authors[author]['first_commit']:
-                authors[author]['first_commit'] = commit_time
-            if not authors[author]['last_commit'] or commit_time > authors[author]['last_commit']:
-                authors[author]['last_commit'] = commit_time
-                
-            # Get changed files for this commit
-            stat = self._run_git_command(['show', '--stat', commit_hash])
-            files_changed = len([l for l in stat.split('\n') if l.strip() and '|' in l])
-            lines = sum(int(n) for n in stat.split('\n')[-1].split(',')[:-1] if n.strip().isdigit())
-            
-            authors[author]['files_changed'] = max(authors[author]['files_changed'], files_changed)
-            authors[author]['lines_changed'] += lines
-            
-        return dict(authors)
 
-    def _analyze_branches(self) -> List[Dict]:
-        """Analyze branch information."""
-        branches = []
+        current_author = None
+        current_date = None
+
+        for line in log.split('\n'):
+            if '|' in line:
+                author, timestamp = line.split('|')
+                current_author = author
+                current_date = datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d')
+                stats['contributions_by_author'][author] += 1
+                stats['active_days_by_author'][author].add(current_date)
+            elif line.strip() and current_author:
+                try:
+                    adds, dels, file = line.split('\t')
+                    if adds.isdigit() and dels.isdigit():
+                        stats['expertise_by_file'][file][current_author] += int(adds) + int(dels)
+                except:
+                    continue
+
+        stats['total_contributors'] = len(stats['contributions_by_author'])
+
+        return stats
+
+    def _analyze_branches(self) -> Dict:
+        """Analyze branch statistics."""
+        branches = {
+            'total_branches': 0,
+            'active_branches': [],
+            'stale_branches': [],
+            'recently_merged': []
+        }
+
+        # Get all branches
+        branch_list = self._run_git_command(['branch', '-r', '--format=%(refname:short)|%(committerdate:unix)'])
         
-        for branch in self._run_git_command(['branch']).split('\n'):
-            if not branch: continue
-            is_active = branch.startswith('*')
-            name = branch.replace('*', '').strip()
-            
-            # Get last commit info
-            last_commit = self._run_git_command([
-                'log', '-1', '--format=%at|%an', name
-            ])
-            
-            if last_commit:
-                timestamp, author = last_commit.split('|')
-                commit_time = datetime.fromtimestamp(int(timestamp))
+        current_time = datetime.now().timestamp()
+        for branch in branch_list.split('\n'):
+            if branch.strip():
+                name, last_commit = branch.split('|')
+                last_commit_date = datetime.fromtimestamp(int(last_commit))
+                days_since_commit = (current_time - int(last_commit)) / 86400
                 
-                # Count commits and authors
-                commits = int(self._run_git_command(['rev-list', '--count', name]))
-                authors = len(set(self._run_git_command([
-                    'log', '--format=%an', name
-                ]).split('\n')))
+                branches['total_branches'] += 1
                 
-                # Count changed files
-                files = len(set(self._run_git_command([
-                    'log', '--name-only', '--format=', name
-                ]).split('\n')))
-                
-                branches.append({
-                    'name': name,
-                    'is_active': is_active,
-                    'last_commit_date': commit_time,
-                    'commits': commits,
-                    'authors': authors,
-                    'files_changed': files
-                })
-                
+                if days_since_commit <= 30:  # Active in last 30 days
+                    branches['active_branches'].append({
+                        'name': name,
+                        'last_commit': last_commit_date.strftime('%Y-%m-%d')
+                    })
+                else:
+                    branches['stale_branches'].append({
+                        'name': name,
+                        'days_stale': int(days_since_commit)
+                    })
+
         return branches
 
+    def _identify_hotspots(self) -> Dict:
+        """Identify code hotspots based on frequency of changes and complexity."""
+        hotspots = {
+            'files': [],
+            'directories': defaultdict(int)
+        }
+
+        # Get files with most changes
+        changes = self._run_git_command([
+            'log', '--pretty=format:', '--name-only', '--diff-filter=AM'
+        ])
+
+        file_changes = defaultdict(int)
+        for file in changes.split('\n'):
+            if file.strip():
+                file_changes[file] += 1
+                directory = os.path.dirname(file)
+                hotspots['directories'][directory] += 1
+
+        # Convert to list and sort
+        hotspots['files'] = [
+            {'file': file, 'changes': count}
+            for file, count in file_changes.items()
+        ]
+        hotspots['files'].sort(key=lambda x: x['changes'], reverse=True)
+        hotspots['files'] = hotspots['files'][:20]  # Top 20 hotspots
+
+        return hotspots
+
+    def _get_empty_analysis(self) -> Dict:
+        """Return empty analysis structure when analysis fails."""
+        return {
+            'commit_history': {
+                'total_commits': 0,
+                'commit_frequency': {},
+                'commit_times': {},
+                'recent_activity': [],
+                'largest_commits': []
+            },
+            'code_churn': {
+                'total_additions': 0,
+                'total_deletions': 0,
+                'by_author': {},
+                'by_file': {}
+            },
+            'contributor_stats': {
+                'total_contributors': 0,
+                'contributions_by_author': {},
+                'active_days_by_author': {}
+            },
+            'branch_stats': {
+                'total_branches': 0,
+                'active_branches': [],
+                'stale_branches': []
+            },
+            'hotspots': {
+                'files': [],
+                'directories': {}
+            }
+        } 
+
     def generate_report(self) -> str:
-        """Generate a Markdown report for Git analysis."""
+        """Generate a Markdown report about git repository."""
         data = self.analyze()
         
-        if 'error' in data:
-            return f"# Git Repository Analysis\n\n❌ {data['error']}"
-            
         report = [
-            "# Git Repository Analysis\n",
-            "## 📊 Commit Activity\n",
-            "### Recent Activity",
-            f"- Total Commits: **{data['commit_frequency']['total']}**",
-            "\n### Daily Commits",
-            "| Date | Commits |",
-            "|------|---------|",
+            "# Git Repository Analysis Report\n",
+            
+            "## 📊 Commit History\n",
+            f"- Total Commits: {data['commit_history']['total_commits']}",
+            
+            "\n### 📈 Largest Commits",
+            "| Hash | Author | Date | Message | Changes |",
+            "|------|--------|------|---------|----------|"
         ]
         
-        # Add daily commits (last 7 days)
-        sorted_days = sorted(data['commit_frequency']['daily'].items(), reverse=True)[:7]
-        for day, count in sorted_days:
-            report.append(f"| {day} | {count} |")
+        # Add largest commits
+        for commit in data['commit_history']['largest_commits'][:5]:
+            report.append(
+                f"| {commit['hash']} | {commit['author']} | {commit['date']} | "
+                f"{commit['message'][:50]}... | {commit['changes']} |"
+            )
         
-        # Code Churn Section
+        # Add code churn section
         report.extend([
-            "\n## 📈 Code Churn",
-            f"- Total Lines Added: **{data['code_churn']['total_additions']}**",
-            f"- Total Lines Deleted: **{data['code_churn']['total_deletions']}**",
-            "\n### Changes by Author",
-            "| Author | Additions | Deletions | Total |",
-            "|--------|-----------|-----------|-------|"
+            "\n## 📝 Code Churn",
+            f"- Total Additions: {data['code_churn']['total_additions']}",
+            f"- Total Deletions: {data['code_churn']['total_deletions']}",
+            
+            "\n### 👥 Changes by Author",
+            "| Author | Additions | Deletions |",
+            "|--------|-----------|-----------|"
         ])
         
-        # Add author statistics
         for author, stats in data['code_churn']['by_author'].items():
-            total = stats['additions'] + stats['deletions']
             report.append(
-                f"| {author} | +{stats['additions']} | -{stats['deletions']} | {total} |"
+                f"| {author} | {stats['additions']} | {stats['deletions']} |"
             )
         
-        # Most Changed Files
+        # Add contributor stats
         report.extend([
-            "\n### Most Changed Files",
-            "| File | Additions | Deletions | Total Changes |",
-            "|------|-----------|-----------|---------------|"
+            f"\n## 👥 Contributors ({data['contributor_stats']['total_contributors']})",
+            "\n### Most Active Contributors",
+            "| Author | Commits | Active Days |",
+            "|--------|---------|-------------|"
         ])
         
-        # Sort files by total changes and show top 10
-        sorted_files = sorted(
-            data['code_churn']['by_file'].items(),
-            key=lambda x: x[1]['additions'] + x[1]['deletions'],
+        # Sort contributors by number of commits
+        sorted_contributors = sorted(
+            data['contributor_stats']['contributions_by_author'].items(),
+            key=lambda x: x[1],
             reverse=True
-        )[:10]
+        )
         
-        for file, stats in sorted_files:
-            total = stats['additions'] + stats['deletions']
-            report.append(
-                f"| {file} | +{stats['additions']} | -{stats['deletions']} | {total} |"
-            )
+        for author, commits in sorted_contributors[:10]:
+            active_days = len(data['contributor_stats']['active_days_by_author'][author])
+            report.append(f"| {author} | {commits} | {active_days} |")
         
-        # Contributors Section
+        # Add branch stats
         report.extend([
-            "\n## 👥 Contributors",
-            "| Author | Commits | Files Changed | Lines Changed | First Commit | Last Commit |",
-            "|--------|---------|---------------|---------------|--------------|-------------|"
+            f"\n## 🌿 Branches ({data['branch_stats']['total_branches']})",
+            f"- Active Branches: {len(data['branch_stats']['active_branches'])}",
+            f"- Stale Branches: {len(data['branch_stats']['stale_branches'])}",
+            
+            "\n### Stale Branches",
+            "| Branch | Days Stale |",
+            "|--------|------------|"
         ])
         
-        for author, stats in data['authors'].items():
-            first = stats['first_commit'].strftime('%Y-%m-%d') if stats['first_commit'] else '-'
-            last = stats['last_commit'].strftime('%Y-%m-%d') if stats['last_commit'] else '-'
-            report.append(
-                f"| {author} | {stats['commits']} | {stats['files_changed']} | "
-                f"{stats['lines_changed']} | {first} | {last} |"
-            )
+        for branch in sorted(data['branch_stats']['stale_branches'], 
+                            key=lambda x: x['days_stale'], 
+                            reverse=True)[:5]:
+            report.append(f"| {branch['name']} | {branch['days_stale']} |")
         
-        # Branches Section
+        # Add hotspots section
         report.extend([
-            "\n## 🌳 Branches",
-            "| Branch | Status | Commits | Contributors | Files Changed | Last Commit |",
-            "|--------|--------|---------|--------------|---------------|-------------|"
+            "\n## 🔥 Code Hotspots",
+            "\n### Most Changed Files",
+            "| File | Changes |",
+            "|------|----------|"
         ])
         
-        for branch in data['branches']:
-            status = "🟢 Active" if branch['is_active'] else "⚪️ Inactive"
-            last_commit = branch['last_commit_date'].strftime('%Y-%m-%d')
-            report.append(
-                f"| {branch['name']} | {status} | {branch['commits']} | "
-                f"{branch['authors']} | {branch['files_changed']} | {last_commit} |"
-            )
+        for hotspot in data['hotspots']['files'][:10]:
+            report.append(f"| {hotspot['file']} | {hotspot['changes']} |")
         
         return '\n'.join(report) 
