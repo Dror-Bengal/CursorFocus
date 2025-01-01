@@ -106,6 +106,19 @@ class RulesAnalyzer:
             '.java': {'lang': 'java', 'weight': 1.0, 'type': 'source'},
             '.go': {'lang': 'go', 'weight': 1.0, 'type': 'source'},
             '.cs': {'lang': 'csharp', 'weight': 1.0, 'type': 'source'},
+            
+            # C++ ecosystem
+            '.cpp': {'lang': 'cpp', 'weight': 1.0, 'type': 'source'},
+            '.hpp': {'lang': 'cpp', 'weight': 0.8, 'type': 'header'},
+            '.cc': {'lang': 'cpp', 'weight': 1.0, 'type': 'source'},
+            '.h': {'lang': 'cpp', 'weight': 0.8, 'type': 'header'},
+            '.cxx': {'lang': 'cpp', 'weight': 1.0, 'type': 'source'},
+            '.c++': {'lang': 'cpp', 'weight': 1.0, 'type': 'source'},
+            
+            # C# ecosystem
+            '.cs': {'lang': 'csharp', 'weight': 1.0, 'type': 'source'},
+            '.cshtml': {'lang': 'csharp', 'weight': 0.8, 'type': 'view'},
+            '.csx': {'lang': 'csharp', 'weight': 0.9, 'type': 'script'},
         }
 
         # Calculate weighted scores considering file size and type
@@ -142,6 +155,22 @@ class RulesAnalyzer:
                 ('.eslintrc', 1, False),
                 ('webpack.config.js', 2, False)
             ],
+            'cpp': [
+                ('CMakeLists.txt', 3, True),
+                ('Makefile', 2, False),
+                ('.clang-format', 1, False),
+                ('compile_commands.json', 2, False),
+                ('vcxproj', 2, False),
+                ('conanfile.txt', 2, False)
+            ],
+            'csharp': [
+                ('*.csproj', 3, True),
+                ('packages.config', 2, False),
+                ('Web.config', 2, False),
+                ('AssemblyInfo.cs', 1, False),
+                ('NuGet.Config', 1, False),
+                ('global.json', 1, False)
+            ]
         }
 
         # Check for required indicators and adjust scores

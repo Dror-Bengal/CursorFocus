@@ -82,7 +82,9 @@ NON_CODE_EXTENSIONS = {
 # Extensions that should be analyzed for code
 CODE_EXTENSIONS = {
     '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.h', 
-    '.hpp', '.cs', '.go', '.rb', '.php', '.phtml', '.phps'
+    '.hpp', '.cs', '.go', '.rb', '.php', '.phtml', '.phps', 
+    # Add C++ and C# extensions
+    '.cc', '.cxx', '.cp', '.c++', '.cshtml', '.csx'
 }
 
 # Regex patterns for function detection
@@ -94,7 +96,15 @@ FUNCTION_PATTERNS = {
     'object_property': r'(\w+)\s*:\s*(?:\([^)]*\)|[^=])\s*=>',
     'php_function': r'(?:public\s+|private\s+|protected\s+)?(?:static\s+)?function\s+(\w+)\s*\(',
     'php_class_method': r'(?:public\s+|private\s+|protected\s+)?(?:static\s+)?function\s+(\w+)\s*\(',
-    'php_closure': r'\$(\w+)\s*=\s*function\s*\('
+    'php_closure': r'\$(\w+)\s*=\s*function\s*\(',
+    # Add C++ patterns
+    'cpp_function': r'(?:virtual\s+)?(?:static\s+)?(?:inline\s+)?(?:const\s+)?(?:\w+(?:::\w+)*\s+)?(\w+)\s*\([^)]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?(?:=\s*0\s*)?(?=\s*\{|;)',
+    'cpp_method': r'(?:virtual\s+)?(?:explicit\s+)?(?:static\s+)?(?:inline\s+)?(?:const\s+)?(?:\w+(?:::\w+)*\s+)?(\w+)::\s*(\w+)\s*\([^)]*\)\s*(?:const\s*)?(?:noexcept\s*)?(?:override\s*)?(?:final\s*)?(?:=\s*0\s*)?(?=\s*\{|;)',
+    
+    # Add C# patterns  
+    'csharp_method': r'(?:public|private|protected|internal|static|virtual|override|abstract|async)*\s+(?:\w+\s+)?(\w+)\s*\([^)]*\)\s*(?:where\s+[^{]+)?(?=\s*\{|;)',
+    'csharp_property': r'(?:public|private|protected|internal)\s+(?:\w+\s+)?(\w+)\s*\{[^}]*\}',
+    'csharp_event': r'(?:public|private|protected|internal)\s+event\s+\w+\s+(\w+)\s*;'
 }
 
 # Keywords that should not be treated as function names
@@ -103,7 +113,16 @@ IGNORED_KEYWORDS = {
     'break', 'continue', 'case', 'default', 'to', 'from', 'import', 'as',
     'try', 'except', 'raise', 'with', 'async', 'await', 'yield', 'assert',
     'pass', 'del', 'print', 'in', 'is', 'not', 'and', 'or', 'lambda',
-    'global', 'nonlocal', 'class', 'def', 'n', 'lines', 'directly'
+    'global', 'nonlocal', 'class', 'def', 'n', 'lines', 'directly',
+    # C++ keywords
+    'class', 'struct', 'union', 'enum', 'template', 'typename', 'namespace',
+    'operator', 'friend', 'using', 'typedef', 'decltype', 'constexpr',
+    
+    # C# keywords  
+    'abstract', 'async', 'await', 'checked', 'const', 'event', 'extern',
+    'fixed', 'goto', 'implicit', 'interface', 'internal', 'lock', 'namespace',
+    'operator', 'out', 'override', 'params', 'readonly', 'ref', 'sealed',
+    'sizeof', 'stackalloc', 'this', 'unsafe', 'virtual', 'volatile', 'where'
 }
 
 # Names of files and directories that should be ignored

@@ -127,6 +127,24 @@ class RulesGenerator:
                 'use modern PHP features',
                 'prefer object-oriented programming',
                 'use modern PHP syntax'
+            ],
+            'cpp': [
+                'follow C++ Core Guidelines',
+                'use RAII principles',
+                'prefer references over pointers when possible',
+                'use smart pointers over raw pointers',
+                'follow const correctness',
+                'use std::string over C-style strings',
+                'leverage STL containers and algorithms'
+            ],
+            'csharp': [
+                'follow C# coding conventions',
+                'use properties over public fields',
+                'prefer async/await over Task.Run',
+                'use LINQ for collection operations',
+                'implement IDisposable when needed',
+                'use string interpolation over concatenation',
+                'leverage pattern matching features'
             ]
         }
         return language_rules.get(language.lower(), [])
