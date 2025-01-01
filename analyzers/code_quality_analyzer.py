@@ -51,7 +51,7 @@ class CodeQualityAnalyzer(BaseAnalyzer):
         
         for root, _, files in os.walk(self.project_path):
             for file in files:
-                if file.endswith(('.py', '.js', '.ts', '.jsx', '.tsx')):
+                if file.endswith(('.py', '.js', '.ts', '.jsx', '.tsx', '.php', '.phtml')):
                     file_path = os.path.join(root, file)
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
@@ -115,7 +115,7 @@ class CodeQualityAnalyzer(BaseAnalyzer):
         
         for root, _, files in os.walk(self.project_path):
             for file in files:
-                if file.endswith(('.py', '.js', '.ts', '.jsx', '.tsx')):
+                if file.endswith(('.py', '.js', '.ts', '.jsx', '.tsx', '.php', '.phtml')):
                     file_path = os.path.join(root, file)
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()

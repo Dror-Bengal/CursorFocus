@@ -122,6 +122,11 @@ class RulesGenerator:
                 'use strict type checking',
                 'leverage type inference',
                 'use interface over type when possible'
+            ],
+            'php': [
+                'use modern PHP features',
+                'prefer object-oriented programming',
+                'use modern PHP syntax'
             ]
         }
         return language_rules.get(language.lower(), [])

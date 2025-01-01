@@ -82,7 +82,7 @@ NON_CODE_EXTENSIONS = {
 # Extensions that should be analyzed for code
 CODE_EXTENSIONS = {
     '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.h', 
-    '.hpp', '.cs', '.go', '.rb', '.php'
+    '.hpp', '.cs', '.go', '.rb', '.php', '.phtml', '.phps'
 }
 
 # Regex patterns for function detection
@@ -91,7 +91,10 @@ FUNCTION_PATTERNS = {
     'arrow': r'(?:^|\s+)(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[^=])\s*=>',
     'method': r'\b(\w+)\s*:\s*(?:async\s*)?function',
     'class_method': r'(?:^|\s+)(?:async\s+)?(\w+)\s*\([^)]*\)\s*{',
-    'object_property': r'(\w+)\s*:\s*(?:\([^)]*\)|[^=])\s*=>'
+    'object_property': r'(\w+)\s*:\s*(?:\([^)]*\)|[^=])\s*=>',
+    'php_function': r'(?:public\s+|private\s+|protected\s+)?(?:static\s+)?function\s+(\w+)\s*\(',
+    'php_class_method': r'(?:public\s+|private\s+|protected\s+)?(?:static\s+)?function\s+(\w+)\s*\(',
+    'php_closure': r'\$(\w+)\s*=\s*function\s*\('
 }
 
 # Keywords that should not be treated as function names
