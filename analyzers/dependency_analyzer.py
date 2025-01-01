@@ -1,169 +1,192 @@
 import os
 import json
 import subprocess
+import logging
 from typing import Dict, List, Tuple
+from collections import defaultdict
+from .base_analyzer import BaseAnalyzer
 
-class DependencyAnalyzer:
+class DependencyAnalyzer(BaseAnalyzer):
     def __init__(self, project_path: str):
-        self.project_path = project_path
-        
-    def analyze(self) -> Dict:
-        """Analyze dependencies efficiently."""
-        return {
-            'direct': self._get_direct_dependencies(),
-            'transitive': self._get_transitive_dependencies(),
-            'outdated': [],
-            'missing_tools': self._check_missing_tools()
+        super().__init__(project_path)
+        self.dependency_files = {
+            'python': ['requirements.txt', 'Pipfile', 'pyproject.toml', 'setup.py'],
+            'node': ['package.json', 'yarn.lock', 'package-lock.json'],
+            'ruby': ['Gemfile', 'Gemfile.lock'],
+            'php': ['composer.json', 'composer.lock']
         }
 
-    def _get_direct_dependencies(self) -> Dict[str, str]:
-        """Get direct dependencies from requirements.txt and setup.py."""
-        direct_deps = {}
-        
-        # Check requirements.txt
-        req_file = os.path.join(self.project_path, 'requirements.txt')
-        if os.path.exists(req_file):
-            try:
-                with open(req_file, 'r', encoding='utf-8', errors='ignore') as f:
-                    for line in f:
-                        line = line.strip()
-                        if line and not line.startswith('#'):
-                            if '>=' in line:
-                                name, version = line.split('>=')
-                                direct_deps[f"{name.strip()}>={version.strip()}"] = 'latest'
-                            elif '==' in line:
-                                name, version = line.split('==')
-                                direct_deps[name.strip()] = version.strip()
-                            else:
-                                direct_deps[line.strip()] = 'latest'
-            except Exception as e:
-                print(f"⚠️ Warning: Could not read requirements.txt: {str(e)}")
+    def analyze(self) -> Dict:
+        """Analyze project dependencies."""
+        return self.safe_execute(
+            self._analyze_dependencies,
+            "Error analyzing dependencies",
+            self._get_empty_analysis()
+        )
 
-        # Check setup.py
-        setup_file = os.path.join(self.project_path, 'setup.py')
-        if os.path.exists(setup_file):
-            try:
-                with open(setup_file, 'r', encoding='utf-8', errors='ignore') as f:
-                    content = f.read()
-                    # Find install_requires
-                    if 'install_requires=' in content:
-                        # Simplify: only get explicit dependencies
-                        import re
-                        deps = re.findall(r"'([^']+)'", content)
-                        for dep in deps:
-                            if '>=' in dep:
-                                name, version = dep.split('>=')
-                                direct_deps[f"{name.strip()}>={version.strip()}"] = 'latest'
-                            elif '==' in dep:
-                                name, version = dep.split('==')
-                                direct_deps[name.strip()] = version.strip()
-                            else:
-                                direct_deps[dep.strip()] = 'latest'
-            except Exception as e:
-                print(f"⚠️ Warning: Could not read setup.py: {str(e)}")
+    def _analyze_dependencies(self) -> Dict:
+        """Internal method to analyze dependencies."""
+        dependencies = {
+            'direct': defaultdict(list),
+            'dev': defaultdict(list),
+            'outdated': [],
+            'security_alerts': [],
+            'stats': {
+                'total_dependencies': 0,
+                'direct_dependencies': 0,
+                'dev_dependencies': 0,
+                'outdated_count': 0
+            }
+        }
 
-        return direct_deps
+        # Analyze each dependency file
+        for lang, files in self.dependency_files.items():
+            for file in files:
+                file_path = os.path.join(self.project_path, file)
+                if os.path.exists(file_path):
+                    self._analyze_dependency_file(file_path, lang, dependencies)
+                    break
 
-    def _get_transitive_dependencies(self) -> Dict[str, str]:
-        """Get transitive dependencies from pip freeze."""
-        trans_deps = {}
+        # Check for outdated dependencies and security vulnerabilities
+        self._check_outdated_dependencies(dependencies)
+        self._check_security_vulnerabilities(dependencies)
+
+        return dependencies
+
+    def _analyze_dependency_file(self, file_path: str, lang: str, dependencies: Dict) -> None:
+        """Analyze a specific dependency file."""
         try:
-            import pkg_resources
-            working_set = pkg_resources.WorkingSet()
-            
-            # Get direct deps first
-            direct = set(self._get_direct_dependencies().keys())
-            
-            # Check all installed packages
-            for dist in working_set:
-                name = dist.key
-                # If not a direct dependency
-                if not any(name in d for d in direct):
-                    for req in dist.requires():
-                        spec = str(req.specifier) if req.specifier else ''
-                        if spec:
-                            trans_deps[req.name] = spec
+            if lang == 'node':
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    deps = data.get('dependencies', {})
+                    dev_deps = data.get('devDependencies', {})
+                    
+                    dependencies['direct'][lang].extend(deps.items())
+                    dependencies['dev'][lang].extend(dev_deps.items())
+                    
+                    dependencies['stats']['direct_dependencies'] += len(deps)
+                    dependencies['stats']['dev_dependencies'] += len(dev_deps)
+                    
+            elif lang == 'python':
+                if file_path.endswith('requirements.txt'):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        for line in f:
+                            if line.strip() and not line.startswith('#'):
+                                dependencies['direct'][lang].append(line.strip())
+                                dependencies['stats']['direct_dependencies'] += 1
+
+            # Update total dependencies count
+            dependencies['stats']['total_dependencies'] = (
+                dependencies['stats']['direct_dependencies'] + 
+                dependencies['stats']['dev_dependencies']
+            )
+
         except Exception as e:
-            print(f"⚠️ Warning: Could not analyze transitive dependencies: {str(e)}")
-        
-        return trans_deps
+            logging.warning(f"Error analyzing dependency file {file_path}: {str(e)}")
 
-    def _check_missing_tools(self) -> List[str]:
-        """Check for missing analysis tools."""
-        missing = []
-        
+    def _check_outdated_dependencies(self, dependencies: Dict) -> None:
+        """Check for outdated dependencies using appropriate package manager."""
         try:
-            import safety
-        except ImportError:
-            missing.append("Safety package not installed. Install with: pip install safety")
-        
+            if os.path.exists(os.path.join(self.project_path, 'package.json')):
+                # Use npm to check outdated packages
+                result = subprocess.run(
+                    ['npm', 'outdated', '--json'],
+                    capture_output=True,
+                    text=True,
+                    cwd=self.project_path
+                )
+                if result.stdout:
+                    outdated = json.loads(result.stdout)
+                    for pkg, info in outdated.items():
+                        dependencies['outdated'].append({
+                            'package': pkg,
+                            'current': info.get('current', ''),
+                            'latest': info.get('latest', ''),
+                            'type': 'npm'
+                        })
+                        
+            dependencies['stats']['outdated_count'] = len(dependencies['outdated'])
+
+        except Exception as e:
+            logging.warning(f"Error checking outdated dependencies: {str(e)}")
+
+    def _check_security_vulnerabilities(self, dependencies: Dict) -> None:
+        """Check for known security vulnerabilities in dependencies."""
         try:
-            import pip
-        except ImportError:
-            missing.append("pip not found in environment")
-            
-        return missing
+            if os.path.exists(os.path.join(self.project_path, 'package.json')):
+                result = subprocess.run(
+                    ['npm', 'audit', '--json'],
+                    capture_output=True,
+                    text=True,
+                    cwd=self.project_path
+                )
+                if result.stdout:
+                    audit_data = json.loads(result.stdout)
+                    for vuln in audit_data.get('vulnerabilities', {}).values():
+                        dependencies['security_alerts'].append({
+                            'package': vuln.get('name'),
+                            'severity': vuln.get('severity'),
+                            'description': vuln.get('description'),
+                            'recommendation': vuln.get('recommendation', 'Update to latest version')
+                        })
+
+        except Exception as e:
+            logging.warning(f"Error checking security vulnerabilities: {str(e)}")
 
     def generate_report(self) -> str:
-        """Generate a Markdown report for dependencies."""
-        deps = self.analyze()
+        """Generate a Markdown report about dependencies."""
+        data = self.analyze()
         
         report = [
-            "# Dependencies Analysis Report\n",
-            "## Overview\n"
+            "# Dependency Analysis Report\n",
+            
+            "## 📦 Dependencies Overview\n",
+            f"- Total Dependencies: {data['stats']['total_dependencies']}",
+            f"- Direct Dependencies: {data['stats']['direct_dependencies']}",
+            f"- Dev Dependencies: {data['stats']['dev_dependencies']}",
+            f"- Outdated Dependencies: {data['stats']['outdated_count']}",
+            
+            "\n## 🔍 Direct Dependencies"
         ]
         
-        # Missing Tools Section
-        if deps['missing_tools']:
+        # Add direct dependencies by language
+        for lang, deps in data['direct'].items():
+            if deps:
+                report.extend([
+                    f"\n### {lang.title()}",
+                    "| Package | Version |",
+                    "|---------|----------|"
+                ])
+                for dep in deps:
+                    if isinstance(dep, tuple):  # Node.js dependencies
+                        report.append(f"| {dep[0]} | {dep[1]} |")
+                    else:  # Python requirements
+                        report.append(f"| {dep} | - |")
+        
+        # Add outdated dependencies section
+        if data['outdated']:
             report.extend([
-                "### 🔧 Missing Analysis Tools",
-                *[f"- {tool}" for tool in deps['missing_tools']],
-                ""
+                "\n## ⚠️ Outdated Dependencies",
+                "| Package | Current | Latest | Type |",
+                "|---------|----------|---------|------|"
             ])
-        
-        # Direct Dependencies Section
-        report.extend([
-            "### 📦 Direct Dependencies\n",
-            "| Package | Version |",
-            "|---------|---------|"
-        ])
-        
-        if deps['direct']:
-            for pkg, version in deps['direct'].items():
-                report.append(f"| {pkg} | {version} |")
-        else:
-            report.append("| No direct dependencies found | - |")
-        
-        # Transitive Dependencies Section
-        report.extend([
-            "\n### 🔄 Transitive Dependencies\n",
-            "| Package | Version Constraint |",
-            "|---------|-------------------|"
-        ])
-        
-        if deps['transitive']:
-            for pkg, version in deps['transitive'].items():
-                report.append(f"| {pkg} | {version} |")
-        else:
-            report.append("| No transitive dependencies found | - |")
-        
-        # Outdated Packages Section
-        report.extend([
-            "\n### ⚠️ Outdated Packages\n",
-            "| Package | Current | Latest | Upgrade Command |",
-            "|---------|---------|--------|-----------------|"
-        ])
-        
-        if deps['outdated']:
-            for pkg in deps['outdated']:
+            for dep in data['outdated']:
                 report.append(
-                    f"| {pkg['name']} | {pkg['current']} | {pkg['latest']} | `{pkg['upgrade_cmd']}` |"
+                    f"| {dep['package']} | {dep['current']} | {dep['latest']} | {dep['type']} |"
                 )
-        else:
-            report.append("| No outdated packages found | - | - | - |")
+        
+        # Add security alerts section
+        if data['security_alerts']:
+            report.extend([
+                "\n## 🚨 Security Alerts",
+                "| Package | Severity | Description | Recommendation |",
+                "|---------|-----------|-------------|----------------|"
+            ])
+            for alert in data['security_alerts']:
+                report.append(
+                    f"| {alert['package']} | {alert['severity']} | {alert['description']} | "
+                    f"{alert['recommendation']} |"
+                )
         
         return '\n'.join(report) 
-
-    def _check_outdated_deps(self) -> List[Dict]:
-        """Check for outdated dependencies."""
-        return []  # Implement later if needed 

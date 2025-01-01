@@ -145,7 +145,10 @@ def get_file_type_info(filename):
         '.html': ('HTML', 'Web page template'),
         '.css': ('CSS', 'Stylesheet for visual styling'),
         '.md': ('Markdown', 'Documentation file'),
-        '.json': ('JSON', 'Configuration or data file')
+        '.json': ('JSON', 'Configuration or data file'),
+        '.php': ('PHP Source', 'PHP script containing server-side logic'),
+        '.phtml': ('PHP Template', 'PHP template file with HTML'),
+        '.phps': ('PHP Source', 'PHP source code file')
     }
     
     return type_map.get(ext, ('Generic', 'Project file')) 
