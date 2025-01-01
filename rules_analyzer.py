@@ -106,6 +106,58 @@ class RulesAnalyzer:
             '.java': {'lang': 'java', 'weight': 1.0, 'type': 'source'},
             '.go': {'lang': 'go', 'weight': 1.0, 'type': 'source'},
             '.cs': {'lang': 'csharp', 'weight': 1.0, 'type': 'source'},
+            
+            # C++ ecosystem
+            '.cpp': {'lang': 'cpp', 'weight': 1.0, 'type': 'source'},
+            '.hpp': {'lang': 'cpp', 'weight': 0.8, 'type': 'header'},
+            '.cc': {'lang': 'cpp', 'weight': 1.0, 'type': 'source'},
+            '.h': {'lang': 'cpp', 'weight': 0.8, 'type': 'header'},
+            '.cxx': {'lang': 'cpp', 'weight': 1.0, 'type': 'source'},
+            '.c++': {'lang': 'cpp', 'weight': 1.0, 'type': 'source'},
+            
+            # C# ecosystem
+            '.cs': {'lang': 'csharp', 'weight': 1.0, 'type': 'source'},
+            '.cshtml': {'lang': 'csharp', 'weight': 0.8, 'type': 'view'},
+            '.csx': {'lang': 'csharp', 'weight': 0.9, 'type': 'script'},
+            
+            # Rust ecosystem
+            '.rs': {'lang': 'rust', 'weight': 1.0, 'type': 'source'},
+            '.rlib': {'lang': 'rust', 'weight': 0.8, 'type': 'library'},
+            
+            # Swift ecosystem
+            '.swift': {'lang': 'swift', 'weight': 1.0, 'type': 'source'},
+            '.swiftmodule': {'lang': 'swift', 'weight': 0.7, 'type': 'module'},
+            
+            # Kotlin ecosystem
+            '.kt': {'lang': 'kotlin', 'weight': 1.0, 'type': 'source'},
+            '.kts': {'lang': 'kotlin', 'weight': 0.9, 'type': 'script'},
+            
+            # Dart ecosystem
+            '.dart': {'lang': 'dart', 'weight': 1.0, 'type': 'source'},
+            
+            # Scala ecosystem
+            '.scala': {'lang': 'scala', 'weight': 1.0, 'type': 'source'},
+            '.sc': {'lang': 'scala', 'weight': 0.9, 'type': 'script'},
+            
+            # R ecosystem
+            '.r': {'lang': 'r', 'weight': 1.0, 'type': 'source'},
+            '.rmd': {'lang': 'r', 'weight': 0.8, 'type': 'markdown'},
+            
+            # MATLAB ecosystem
+            '.m': {'lang': 'matlab', 'weight': 1.0, 'type': 'source'},
+            '.mat': {'lang': 'matlab', 'weight': 0.6, 'type': 'data'},
+            
+            # Lua ecosystem
+            '.lua': {'lang': 'lua', 'weight': 1.0, 'type': 'source'},
+            
+            # Perl ecosystem
+            '.pl': {'lang': 'perl', 'weight': 1.0, 'type': 'source'},
+            '.pm': {'lang': 'perl', 'weight': 0.9, 'type': 'module'},
+            '.t': {'lang': 'perl', 'weight': 0.8, 'type': 'test'},
+            
+            # Objective-C ecosystem
+            '.m': {'lang': 'objc', 'weight': 1.0, 'type': 'source'},
+            '.mm': {'lang': 'objc', 'weight': 1.0, 'type': 'source'}
         }
 
         # Calculate weighted scores considering file size and type
@@ -142,6 +194,77 @@ class RulesAnalyzer:
                 ('.eslintrc', 1, False),
                 ('webpack.config.js', 2, False)
             ],
+            'rust': [
+                ('Cargo.toml', 3, True),
+                ('Cargo.lock', 2, False),
+                ('rust-toolchain.toml', 1, False),
+                ('.cargo/config.toml', 1, False),
+                ('rustfmt.toml', 1, False)
+            ],
+            'swift': [
+                ('Package.swift', 3, True),
+                ('.swiftpm', 2, False),
+                ('*.xcodeproj', 2, False),
+                ('*.xcworkspace', 2, False),
+                ('Podfile', 2, False),
+                ('fastlane', 1, False)
+            ],
+            'kotlin': [
+                ('build.gradle.kts', 3, True),
+                ('settings.gradle.kts', 2, False),
+                ('gradlew', 2, False),
+                ('.kotlin-version', 1, False),
+                ('proguard-rules.pro', 1, False)
+            ],
+            'dart': [
+                ('pubspec.yaml', 3, True),
+                ('pubspec.lock', 2, False),
+                ('.dart_tool', 2, False),
+                ('analysis_options.yaml', 1, False),
+                ('dart.cmd', 1, False)
+            ],
+            'scala': [
+                ('build.sbt', 3, True),
+                ('project/build.properties', 2, False),
+                ('.scala-version', 1, False),
+                ('scalafmt.conf', 1, False),
+                ('metals.sbt', 1, False)
+            ],
+            'r': [
+                ('DESCRIPTION', 3, True),
+                ('NAMESPACE', 2, False),
+                ('.Rprofile', 2, False),
+                ('renv.lock', 2, False),
+                ('.Rproj', 1, False)
+            ],
+            'matlab': [
+                ('*.prj', 3, True),
+                ('startup.m', 2, False),
+                ('Contents.m', 2, False),
+                ('*.mlapp', 2, False),
+                ('*.mlx', 1, False)
+            ],
+            'lua': [
+                ('*.rockspec', 3, True),
+                ('.luacheckrc', 2, False),
+                ('luarocks.lock', 2, False),
+                ('config.lua', 1, False),
+                ('init.lua', 1, False)
+            ],
+            'perl': [
+                ('Makefile.PL', 3, True),
+                ('cpanfile', 2, False),
+                ('META.yml', 2, False),
+                ('MANIFEST', 1, False),
+                ('perl-version', 1, False)
+            ],
+            'objc': [
+                ('*.xcodeproj', 3, True),
+                ('Podfile', 2, False),
+                ('*.pch', 2, False),
+                ('Info.plist', 2, False),
+                ('*.storyboard', 1, False)
+            ]
         }
 
         # Check for required indicators and adjust scores
@@ -174,7 +297,76 @@ class RulesAnalyzer:
                 (r'def\s+\w+\s*\(', 1.5),
                 (r'class\s+\w+[:\(]', 1.5)
             ],
-            # ... other languages ...
+            'rust': [
+                (r'use\s+[\w:]+', 1),
+                (r'fn\s+\w+', 1.5),
+                (r'impl\s+\w+', 1.5),
+                (r'pub\s+struct', 1.5),
+                (r'pub\s+enum', 1.5)
+            ],
+            'swift': [
+                (r'import\s+\w+', 1),
+                (r'class\s+\w+', 1.5),
+                (r'struct\s+\w+', 1.5),
+                (r'protocol\s+\w+', 1.5),
+                (r'extension\s+\w+', 1)
+            ],
+            'kotlin': [
+                (r'package\s+[\w.]+', 1),
+                (r'import\s+[\w.]+', 1),
+                (r'class\s+\w+', 1.5),
+                (r'fun\s+\w+', 1.5),
+                (r'data\s+class', 1.5)
+            ],
+            'dart': [
+                (r'import\s+[\'"][\w/]+[\'"]', 1),
+                (r'class\s+\w+', 1.5),
+                (r'void\s+\w+', 1.5),
+                (r'@override', 1),
+                (r'Widget\s+build', 2)
+            ],
+            'scala': [
+                (r'package\s+[\w.]+', 1),
+                (r'import\s+[\w.]+', 1),
+                (r'class\s+\w+', 1.5),
+                (r'object\s+\w+', 1.5),
+                (r'def\s+\w+', 1.5)
+            ],
+            'r': [
+                (r'library\([^\)]+\)', 1.5),
+                (r'<-\s*function', 1.5),
+                (r'%>%', 1),
+                (r'ggplot', 1),
+                (r'data\.frame', 1)
+            ],
+            'matlab': [
+                (r'function\s+\w+', 1.5),
+                (r'classdef\s+\w+', 2),
+                (r'properties', 1.5),
+                (r'methods', 1.5),
+                (r'end', 0.5)
+            ],
+            'lua': [
+                (r'require\s*\([^\)]+\)', 1),
+                (r'function\s+\w+', 1.5),
+                (r'local\s+\w+', 1),
+                (r'module\([^\)]+\)', 1.5),
+                (r'setmetatable', 1)
+            ],
+            'perl': [
+                (r'use\s+\w+', 1),
+                (r'package\s+\w+', 1.5),
+                (r'sub\s+\w+', 1.5),
+                (r'my\s+\$\w+', 1),
+                (r'our\s+\$\w+', 1)
+            ],
+            'objc': [
+                (r'@interface', 2),
+                (r'@implementation', 2),
+                (r'@property', 1.5),
+                (r'-(void|id|\w+)\s*\w+', 1.5),
+                (r'\[\w+\s+\w+\]', 1)
+            ]
         }
 
         # Improved content analysis with caching

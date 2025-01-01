@@ -127,6 +127,85 @@ class RulesGenerator:
                 'use modern PHP features',
                 'prefer object-oriented programming',
                 'use modern PHP syntax'
+            ],
+            'cpp': [
+                'follow C++ Core Guidelines',
+                'use RAII principles',
+                'prefer references over pointers when possible',
+                'use smart pointers over raw pointers',
+                'follow const correctness',
+                'use std::string over C-style strings',
+                'leverage STL containers and algorithms'
+            ],
+            'csharp': [
+                'follow C# coding conventions',
+                'use properties over public fields',
+                'prefer async/await over Task.Run',
+                'use LINQ for collection operations',
+                'implement IDisposable when needed',
+                'use string interpolation over concatenation',
+                'leverage pattern matching features'
+            ],
+            'rust': [
+                'follow Rust idioms',
+                'use ? operator for error handling',
+                'prefer iterators over loops',
+                'leverage the type system',
+                'use cargo fmt and clippy'
+            ],
+            'swift': [
+                'follow Swift API design guidelines',
+                'use optionals properly',
+                'leverage protocol-oriented programming',
+                'use Swift concurrency features'
+            ],
+            'kotlin': [
+                'use Kotlin idioms',
+                'leverage null safety features',
+                'use coroutines for async code',
+                'prefer val over var'
+            ],
+            'dart': [
+                'follow Dart style guide',
+                'use async/await for async operations',
+                'leverage strong typing',
+                'use const constructors when possible'
+            ],
+            'scala': [
+                'use functional programming features',
+                'leverage immutable collections',
+                'use pattern matching',
+                'follow Scala style guide'
+            ],
+            'r': [
+                'use tidyverse packages',
+                'vectorize operations',
+                'use proper data structures',
+                'follow R style guide'
+            ],
+            'matlab': [
+                'vectorize operations',
+                'preallocate arrays',
+                'use proper error handling',
+                'follow MATLAB style guide'
+            ],
+            'lua': [
+                'use proper scoping',
+                'leverage metatables',
+                'follow Lua style guide',
+                'use proper error handling'
+            ],
+            'perl': [
+                'use strict and warnings',
+                'use modern Perl features',
+                'follow Perl best practices',
+                'proper exception handling'
+            ],
+            'objc': [
+                'follow Objective-C style guide',
+                'use modern Objective-C features',
+                'proper memory management',
+                'use proper naming conventions'
             ]
         }
         return language_rules.get(language.lower(), [])
