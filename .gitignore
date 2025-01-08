@@ -45,3 +45,6 @@ Focus.md
 *.log
 test_output/
 config.json 
+
+# Test cases
+test_case/Quest2Wolfram/ 
