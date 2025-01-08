@@ -1,0 +1,131 @@
+{
+    "name": ".cursorrules",
+    "version": "1.0.0",
+    "last_updated": "2024-01-09T12:00:00+00:00",
+    "project_analysis": {
+      "basic_info": {
+        "name": "repoprompt",
+        "version": "0.1.1",
+        "language": "typescript",
+        "frameworks": {
+          "frontend": [],
+          "backend": [],
+          "ml": [],
+          "ai": []
+        },
+        "type": "vscode_extension",
+        "environment": {
+          "python_version": "3.9",
+          "node_version": "16.x",
+          "cuda_support": false
+        }
+      },
+      "ai_behavior": {
+        "code_generation": {
+          "style": {
+            "prefer": [
+              "typescript",
+              "modular code",
+              "clean architecture"
+            ],
+            "avoid": [
+              "any type",
+              "nested callbacks",
+              "global state"
+            ]
+          },
+          "error_handling": {
+            "strategies": [
+              "try-catch blocks",
+              "error types",
+              "error propagation"
+            ],
+            "logging": [
+              "console logging",
+              "error tracking"
+            ]
+          },
+          "performance": {
+            "optimization": [
+              "code splitting",
+              "lazy loading"
+            ],
+            "memory_management": [
+              "proper disposal",
+              "memory leaks prevention"
+            ]
+          }
+        },
+        "ai_specific": {
+          "llm_integration": {
+            "providers": [],
+            "model_configurations": []
+          },
+          "agent_system": {
+            "architecture": "event-driven",
+            "communication": [
+              "vscode api",
+              "lsp protocol"
+            ],
+            "roles": [
+              "extension host",
+              "language server"
+            ]
+          },
+          "ml_pipeline": {
+            "frameworks": [],
+            "data_processing": [],
+            "model_management": []
+          }
+        }
+      },
+      "development_standards": {
+        "testing": {
+          "frameworks": [
+            "jest",
+            "mocha"
+          ],
+          "coverage": {
+            "threshold": 80.0,
+            "excludes": [
+              "test/**/*",
+              "node_modules/**/*"
+            ]
+          },
+          "types": [
+            "unit",
+            "integration",
+            "e2e"
+          ]
+        },
+        "documentation": {
+          "style": "typescript-doc",
+          "required_sections": [
+            "overview",
+            "api",
+            "setup",
+            "usage"
+          ],
+          "api_documentation": true
+        },
+        "code_quality": {
+          "linters": [
+            "eslint",
+            "tslint"
+          ],
+          "formatters": [
+            "prettier"
+          ],
+          "metrics": [
+            "complexity",
+            "maintainability"
+          ]
+        }
+      }
+    },
+    "project_info": {
+      "name": "repoprompt",
+      "path": "/Users/arthur/dev-space/repoprompt",
+      "type": "vscode_extension"
+    }
+  }

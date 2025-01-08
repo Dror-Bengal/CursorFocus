@@ -95,7 +95,7 @@ def setup_cursor_focus(project_path):
         print(f"Analyzing project: {project_path}")
         analyzer = RulesAnalyzer(project_path)
         project_info = analyzer.analyze_project_for_rules()
-        
+
         rules_generator = RulesGenerator(project_path)
         rules_file = rules_generator.generate_rules_file(project_info)
         print(f"✅ Generated {rules_file}")
@@ -120,23 +120,23 @@ def monitor_project(project_config, global_config):
     """Monitor a single project."""
     project_path = project_config['project_path']
     print(f"\n🔍 Monitoring project: {project_config['name']} at {project_path}")
-    
+
     # Merge project config with global config
     config = {**global_config, **project_config}
-    
+
     focus_file = os.path.join(project_path, 'Focus.md')
     last_content = None
     last_update = 0
 
     while True:
         current_time = time.time()
-        
+
         if current_time - last_update < config.get('update_interval', 60):
             time.sleep(1)
             continue
-            
+
         content = generate_focus_content(project_path, config)
-        
+
         if content != last_content:
             try:
                 with open(focus_file, 'w', encoding='utf-8') as f:
@@ -145,7 +145,7 @@ def monitor_project(project_config, global_config):
                 print(f"✅ {project_config['name']} Focus.md updated at {datetime.now().strftime('%I:%M:%S %p')}")
             except Exception as e:
                 print(f"❌ Error writing Focus.md for {project_config['name']}: {e}")
-        
+
         last_update = current_time
 
 def main():
@@ -167,7 +167,7 @@ def main():
     # Create threads for each project
     from threading import Thread
     threads = []
-    
+
     try:
         for project in config['projects']:
             # Setup project if needed
@@ -185,15 +185,15 @@ def main():
             threads.append(thread)
 
         print("\n📝 Press Ctrl+C to stop all monitors")
-        
+
         # Keep main thread alive
         while True:
             time.sleep(1)
-            
+
     except KeyboardInterrupt:
         print("\n👋 Stopping all CursorFocus monitors")
     except Exception as e:
         print(f"\n❌ Error: {e}")
 
 if __name__ == '__main__':
-    main() 
+    main()

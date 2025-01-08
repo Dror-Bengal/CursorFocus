@@ -12,21 +12,21 @@ def detect_project_type(project_path):
         # Check for indicator files
         if any(os.path.exists(os.path.join(project_path, f)) for f in rules.get('indicators', [])):
             return project_type
-            
+
         # Check for required files
         if rules.get('required_files') and all(os.path.exists(os.path.join(project_path, f)) for f in rules['required_files']):
             return project_type
-            
+
     return 'generic'
 
 def scan_for_projects(root_path, max_depth=3, ignored_dirs=None):
     """Scan directory recursively for projects."""
     if ignored_dirs is None:
         ignored_dirs = _config.get('ignored_directories', [])
-    
+
     projects = []
     root_path = os.path.abspath(root_path or '.')
-    
+
     # Kiểm tra thư mục gốc trước
     project_type = detect_project_type(root_path)
     if project_type != 'generic':
@@ -35,16 +35,16 @@ def scan_for_projects(root_path, max_depth=3, ignored_dirs=None):
             'type': project_type,
             'name': os.path.basename(root_path)
         })
-    
+
     def _scan_directory(current_path, current_depth):
         if current_depth > max_depth:
             return
-            
+
         try:
             # Skip ignored directories
             if any(ignored in current_path.split(os.path.sep) for ignored in ignored_dirs):
                 return
-                
+
             # Scan subdirectories
             for item in os.listdir(current_path):
                 item_path = os.path.join(current_path, item)
@@ -60,11 +60,11 @@ def scan_for_projects(root_path, max_depth=3, ignored_dirs=None):
                     else:
                         # Nếu không phải project thì quét tiếp
                         _scan_directory(item_path, current_depth + 1)
-                    
+
         except (PermissionError, OSError):
             # Skip directories we can't access
             pass
-    
+
     # Bắt đầu quét từ thư mục gốc
     _scan_directory(root_path, 0)
     return projects
@@ -82,7 +82,7 @@ def get_project_description(project_path):
                 "Automatic updates"
             ]
         }
-        
+
         if project_type == 'chrome_extension':
             manifest_path = os.path.join(project_path, 'manifest.json')
             if os.path.exists(manifest_path):
@@ -97,7 +97,7 @@ def get_project_description(project_path):
                             *[f"Permission: {perm}" for perm in manifest_data.get('permissions', [])[:3]]
                         ]
                     })
-                    
+
         elif project_type == 'node_js':
             package_path = os.path.join(project_path, 'package.json')
             if os.path.exists(package_path):
@@ -112,9 +112,9 @@ def get_project_description(project_path):
                             *[f"Dependency: {dep}" for dep in list(package_data.get('dependencies', {}).keys())[:3]]
                         ]
                     })
-        
+
         return project_info
-        
+
     except Exception as e:
         print(f"Error getting project description: {e}")
         return {
@@ -126,7 +126,7 @@ def get_project_description(project_path):
 def get_file_type_info(filename):
     """Get file type information."""
     ext = os.path.splitext(filename)[1].lower()
-    
+
     type_map = {
         '.py': ('Python Source', 'Python script containing project logic'),
         '.js': ('JavaScript', 'JavaScript file for client-side functionality'),
@@ -138,5 +138,5 @@ def get_file_type_info(filename):
         '.md': ('Markdown', 'Documentation file'),
         '.json': ('JSON', 'Configuration or data file')
     }
-    
-    return type_map.get(ext, ('Generic', 'Project file')) 
+
+    return type_map.get(ext, ('Generic', 'Project file'))

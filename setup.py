@@ -10,10 +10,10 @@ def create_launch_agent(project_path, python_path='/usr/local/bin/python3'):
     home = os.path.expanduser('~')
     launch_agents_dir = os.path.join(home, 'Library/LaunchAgents')
     plist_path = os.path.join(launch_agents_dir, 'com.cursorfocus.plist')
-    
+
     # Create LaunchAgents directory if it doesn't exist
     os.makedirs(launch_agents_dir, exist_ok=True)
-    
+
     plist_content = f'''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -46,10 +46,10 @@ def create_launch_agent(project_path, python_path='/usr/local/bin/python3'):
     # Write the plist file
     with open(plist_path, 'w') as f:
         f.write(plist_content)
-    
+
     # Set proper permissions
     os.chmod(plist_path, 0o644)
-    
+
     return plist_path
 
 def setup_cursorfocus():
@@ -63,18 +63,18 @@ def setup_cursorfocus():
     parser.add_argument('--list', '-l', action='store_true', help='List all configured projects')
     parser.add_argument('--remove', '-r', nargs='+', help='Remove projects by name or index')
     parser.add_argument('--clear', '-c', action='store_true', help='Remove all projects')
-    parser.add_argument('--scan', '-s', nargs='?', const='.', 
+    parser.add_argument('--scan', '-s', nargs='?', const='.',
                        help='Scan directory for projects. If no path provided, scans current directory')
     parser.add_argument('--scan-depth', type=int, default=3, help='Maximum depth for project scanning')
     parser.add_argument('--auto-add', '-a', action='store_true', help='Automatically add all found projects')
-    
+
     args = parser.parse_args()
-    
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(script_dir, 'config.json')
-    
+
     config = load_or_create_config(config_path)
-    
+
     if 'projects' not in config:
         config['projects'] = []
 
@@ -97,19 +97,19 @@ def setup_cursorfocus():
     # Handle scan option
     if args.scan is not None:
         scan_path = os.path.abspath(args.scan) if args.scan else os.getcwd()
-        
+
         print(f"\n🔍 Scanning for projects in: {scan_path}")
         found_projects = scan_for_projects(scan_path, args.scan_depth)
-        
+
         if not found_projects:
             print("No projects found.")
             return
-            
+
         print(f"\nFound {len(found_projects)} projects:")
         for i, project in enumerate(found_projects, 1):
             print(f"\n  {i}. {project['name']} ({project['type']})")
             print(f"     Path: {project['path']}")
-        
+
         if args.auto_add:
             # Automatically add all found projects
             added = 0
@@ -128,11 +128,11 @@ def setup_cursorfocus():
             print("\nSelect projects to add (enter numbers separated by space, 'all', or 'q' to quit):")
             try:
                 selection = input("> ").strip().lower()
-                
+
                 if selection in ['q', 'quit', 'exit']:
                     print("\n❌ Operation cancelled.")
                     return
-                    
+
                 if selection == 'all':
                     indices = range(len(found_projects))
                 else:
@@ -145,7 +145,7 @@ def setup_cursorfocus():
                     except ValueError:
                         print("\n❌ Invalid input. Operation cancelled.")
                         return
-                
+
                 # Add selected projects
                 added = 0
                 for idx in indices:
@@ -160,16 +160,16 @@ def setup_cursorfocus():
                         added += 1
                     else:
                         print(f"\n⚠️  Project already exists: {project['name']}")
-                
+
                 if added > 0:
                     print(f"\n✅ Added {added} new projects to configuration")
                 else:
                     print("\n⚠️  No new projects were added")
-                    
+
             except KeyboardInterrupt:
                 print("\n\n❌ Operation cancelled.")
                 return
-        
+
         if config['projects']:  # Only save if we have projects
             save_config(config_path, config)
         return
@@ -183,7 +183,7 @@ def setup_cursorfocus():
             if not os.path.exists(abs_path):
                 print(f"\n⚠️  Warning: Project path does not exist: {abs_path}")
                 continue
-                
+
             project_config = {
                 'name': args.names[i] if args.names and i < len(args.names) else f"Project {i+1}",
                 'project_path': abs_path,
@@ -191,7 +191,7 @@ def setup_cursorfocus():
                 'max_depth': args.depths[i] if args.depths and i < len(args.depths) else 3
             }
             valid_projects.append(project_config)
-            
+
         # Check for duplicate names
         names = [p['name'] for p in valid_projects]
         if len(names) != len(set(names)):
@@ -204,7 +204,7 @@ def setup_cursorfocus():
                     project['name'] = f"{base_name} ({name_counts[base_name]})"
                 else:
                     name_counts[base_name] = 1
-        
+
         # Update existing projects or add new ones
         for project in valid_projects:
             existing = next((p for p in config['projects'] if p['project_path'] == project['project_path']), None)
@@ -215,7 +215,7 @@ def setup_cursorfocus():
 
     # Save the config
     save_config(config_path, config)
-    
+
     # Install LaunchAgent if requested
     if args.install_agent:
         try:
@@ -223,7 +223,7 @@ def setup_cursorfocus():
             if not os.path.exists(python_path):
                 print("⚠️  Warning: Default Python path not found. Please specify with --python-path")
                 return
-            
+
             plist_path = create_launch_agent(script_dir, python_path)
             print(f"\n✅ LaunchAgent installed at: {plist_path}")
             print("CursorFocus will now start automatically at login")
@@ -234,7 +234,7 @@ def setup_cursorfocus():
         except Exception as e:
             print(f"\n❌ Error installing LaunchAgent: {e}")
             print("Please check permissions and try again")
-    
+
     print("\n✅ CursorFocus configuration updated!")
     print("\n📁 Configured projects:")
     for project in config['projects']:
@@ -242,7 +242,7 @@ def setup_cursorfocus():
         print(f"    Path: {project['project_path']}")
         print(f"    Update interval: {project['update_interval']} seconds")
         print(f"    Max depth: {project['max_depth']} levels")
-    
+
     print("\nTo start monitoring all projects, run:")
     print(f"python3 {os.path.join(script_dir, 'focus.py')}")
 
@@ -284,7 +284,7 @@ def list_projects(projects):
     if not projects:
         print("\n📁 No projects configured.")
         return
-        
+
     print("\n📁 Configured projects:")
     for i, project in enumerate(projects, 1):
         print(f"\n  {i}. {project['name']}:")
@@ -297,13 +297,13 @@ def remove_projects(config, targets):
     if not config['projects']:
         print("\n⚠️ No projects configured.")
         return
-        
+
     remaining_projects = []
     removed = []
-    
+
     for project in config['projects']:
         should_keep = True
-        
+
         for target in targets:
             # Check if target is an index
             try:
@@ -318,10 +318,10 @@ def remove_projects(config, targets):
                     should_keep = False
                     removed.append(project['name'])
                     break
-                    
+
         if should_keep:
             remaining_projects.append(project)
-    
+
     if removed:
         config['projects'] = remaining_projects
         print(f"\n✅ Removed projects: {', '.join(removed)}")
@@ -338,4 +338,4 @@ def confirm_action(message):
             return False
 
 if __name__ == '__main__':
-    setup_cursorfocus() 
+    setup_cursorfocus()

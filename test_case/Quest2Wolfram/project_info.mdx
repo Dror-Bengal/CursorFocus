@@ -1,0 +1,419 @@
+<project_info>
+
+  <project_name>
+      "Quest2Wolfram"
+  </project_name>
+
+  <description>
+    "quest2wolfram" project_info is Project background information & dev standard for "Quest2Wolfram" project team's [Architect]&[Engineer].
+  </description>
+
+  <background>
+
+    ## Quest2Wolfram background Info
+
+    - MathJourney-AI-Tutor App is an AI teacher with multiple teaching modules for K12
+      science education. It provides comprehensive guidance for students on middle and
+      primary school science questions.
+    - Quest2Wolfram is a feature module of MathJourney-AI-Tutor currently in development.
+    - Quest2Wolfram is a Multi-Agent LLM AI System for converting math problems to
+      Wolfram|Alpha API query command.
+    - Quest2Wolfram is built on `Langchain`, `Langchain-Langgraph` and other Langchain
+      ecosystem frameworks. For Langchain-Langgraph details, see: [@langchain-langgraph],
+      [@langchain-langgraph-sdk-python_sdk_ref]
+    - When implementing Langchain and Langchain-Langgraph frameworks, check the docs
+      library and API manual first. Follow official framework definitions to avoid
+      API method errors.
+    - You should grasp how the project code is organized into modules by referring to
+      the structure outlined in the [`Focus.md`] file tree of the project codebase **Key Components:**.
+    - When you need to develop multi-agent system's Agent, please refer to the `<agent_development_standard>` tag standard.
+
+  </background>
+
+
+  <agent_development_standard>
+
+    ## Quest2Wolfram Agent Development Standard
+
+    **Note**
+    During the development of BaseAgent and all business sub-task Agents in the
+    Quest2Wolfram project, do not! :
+
+    1. ADD ANY ADDITIONAL ERROR HANDLING DURING THE BUSINESS LOGIC DEVELOPMENT PHASE TO
+      REDUCE UNNECESSARY CODE COMPLEXITY!
+    2. ADD METHODS LIKE "VALIDATEXXX" DURING THE CURRENT STATE OF CORE BUSINESS LOGIC
+      DEVELOPMENT, AS IT WILL INCREASE CODE COMPLEXITY!
+
+    ### 1. Overview
+
+    Quest2Wolfram is a multi-agent system-based mathematical problem-solving engine
+    that converts mathematical problems into Wolfram|Alpha API query instructions. This
+    document specifies the standard development guidelines for each Agent component in
+    the system. All Agent development must adhere to this standard to ensure system
+    consistency and maintainability.
+
+    #### 1.1 Core Technology Stack
+
+    - **Core Framework**: Langchain, Langchain-Langgraph
+    - **Multi-Agent System**: Multi-agent supervisor (ReAct-style Agent Teams
+      SupervisorAgent + define different agents)
+    - **AI LLM API Provider**: OpenAI API, Anthropic API, Google API
+    - **AI LLM Structured Output Model**: Pydantic model
+
+    ### 2. BaseAgent Base Class & Agent Architecture
+
+    #### 2.1 Technical Architecture Overview
+
+    ##### 2.1.1 Upper Layer Infrastructure
+
+    - **Global Core State Definition**: `state.py`
+      - Defines the system's global state
+      - Workflow control
+      - Node types
+      - State update mechanisms
+
+    - **Global Workflow Management**: `graph.py`
+      - Defines the core logic of the langgraph workflow
+      - Manages node routing rules
+      - Controls the workflow execution process
+
+    - **State Accessor**: `state_accessor.py`
+      - Encapsulates logic for accessing state data
+      - Provides a unified interface to access workflow state context records
+      - Manages workflow control information
+
+    - **Prompt Manager**: `prompt_manager.py`
+      - Loads prompt configuration packages
+      - Processes prompt templates
+      - Loads model configuration information for associated LLM AI Providers
+
+    ##### 2.1.2 Agent Component Architecture
+
+    1. **BaseAgent Base Class**
+      - Provides a unified interface definition
+      - Implements general basic functions
+      - Manages the Agent lifecycle
+      - Integrates LLM structured output
+      - Handles state updates and workflow control
+
+    2. **Specific Agent Implementations**
+      - Inherit from BaseAgent
+      - Focus on business logic
+      - Implement abstract methods
+      - Define output models
+      - Handle business-specific state updates
+
+    #### 2.2 Agent Standard Implementation Guidelines
+
+    ##### 2.2.1 Pydantic Structured Output Model
+
+    Each Agent must define a Pydantic model for its LLM output:
+
+    ```python
+    class AgentOutputModel(BaseModel):
+        """Structured output model for the Agent
+
+        Fields:
+        - result_field: Output result field
+        - metadata: Metadata information
+        """
+        result_field: Type = Field(
+            description="Field description"
+        )
+
+        class Config:
+            json_schema_extra = {
+                "example": {
+                    "result_field": "Example value"
+                }
+            }
+    ```
+
+    ##### 2.2.2 Agent Output Handler Class
+
+    Implement a standard output handler class to process LLM output:
+
+    ```python
+    class AgentOutput:
+        """Handles the Agent's LLM output transformation into standard format
+
+        Methods:
+        1. from_llm_output: Validates raw output
+        2. to_agent_output: Generates standard output
+        """
+        def __init__(self, validated_output: AgentOutputModel):
+            self.result = validated_output.result_field
+
+        @classmethod
+        def from_llm_output(cls, output: Dict[str, Any]) -> 'AgentOutput':
+            """Validates LLM output"""
+            validated_output = AgentOutputModel(**output)
+            return cls(validated_output)
+
+        def to_agent_output(
+            self,
+            agent: BaseAgent,
+            messages: List[BaseMessage],
+            raw_output: Dict[str, Any]
+        ) -> AgentStateOutput:
+            """Generates standard output"""
+            return agent._create_agent_output(
+                result=f"Execution result: {self.result}",
+                messages=messages,
+                workflow_control=None,  # Controlled by Graph Router and Supervisor
+                metadata={
+                    "results": self.result,
+                    "raw_output": raw_output
+                }
+            )
+    ```
+
+    ##### 2.2.3 Agent Class Implementation
+
+    ```python
+    class CustomAgent(
+        BaseAgent[
+            Quest2WolframState,
+            Dict[str, Any],
+            StateUpdate
+        ]
+    ):
+        """Quest2Wolfram Custom Agent
+
+        Core Responsibilities:
+        1. [Describe primary responsibilities]
+        2. [Describe secondary responsibilities]
+
+        Base methods directly called:
+        - _init_llm(): Initializes LLM
+        - _create_base_llm(): Creates LLM instance
+        - _configure_structured_output(): Configures output
+        - get_context_template(): Gets context
+        - get_context_values(): Gets context values
+        - _create_agent_prompt_template(): Creates prompt message templates
+        - _create_agent_output(): Creates standard output
+
+        Inherited methods:
+        - _get_output_schema(): Defines output model
+        - _execute(): Implements business logic
+        """
+
+        def __init__(
+            self,
+            state_accessor: StateAccessor,
+            prompt_manager: PromptManager,
+            error_handler: ErrorManager,
+            config: WorkflowConfigLoader,
+        ):
+            super().__init__(
+                state_accessor=state_accessor,
+                prompt_manager=prompt_manager,
+                error_handler=error_handler,
+                config=config,
+                agent_type="custom"
+            )
+            self.node_type = NodeType.CUSTOM
+
+        def _get_output_schema(self) -> Type[BaseModel]:
+            """Gets output schema"""
+            return CustomOutputModel
+
+        async def _execute(
+            self,
+            state: Quest2WolframState
+        ) -> StateUpdate:
+            """Implements Agent execution logic"""
+            # 1. Get workflow_control to determine action_type
+            workflow_control = self.get_workflow_control()
+            action = workflow_control.action if workflow_control else None
+
+            # 2. Get context values using action_type
+            context_values = self.get_context_values(action)
+
+            # 3. Create prompt template
+            messages = (
+                self._create_agent_prompt_template()
+                .format_messages(**context_values)
+            )
+
+            # 4. Call LLM
+            response = await self.llm.ainvoke(messages)
+
+            # 5. Process response and create standard output
+            agent_output = CustomOutput.from_llm_output(response)
+            agent_output = agent_output.to_agent_output(
+                agent=self,
+                messages=messages,
+                raw_output=response
+            )
+
+            # 6. Create state update
+            return StateUpdate(
+                result=agent_output.content["result"],
+                node_type=self.node_type,
+                output=agent_output,
+                timestamp=datetime.now()
+            )
+    ```
+
+    #### 2.3 Development Process Guidelines
+
+    ##### 2.3.1 Agent Development Steps
+
+    1. **Define Output Model**
+      - Use Pydantic BaseModel
+      - Provide clear field descriptions
+      - Include example configurations
+      - Define field validation rules
+      - Add type annotations
+
+    2. **Implement Output Handler Class**
+      - Validate LLM output
+      - Transform to standard format
+      - Handle metadata
+      - Manage business-specific state updates
+
+    3. **Implement Agent Class**
+      - Inherit from BaseAgent
+      - Implement abstract methods
+      - Follow the execution flow
+      - Handle business-specific state updates
+
+    ##### 2.3.2 Code Organization Guidelines
+
+    1. **File Structure**
+
+    Each Agent component within a team should be an independent Python file, with file
+    names ending in `_agent.py`. The file path should be under the `agents/` directory.
+
+    ```tree
+    agents/
+    ├── __init__.py
+    ├── analysis_agent.py
+    ├── check_agent.py
+    ├── reflect_agent.py
+    ├── transform_agent.py
+    └── xxx_agent.py       # Newly added Agent
+    ```
+
+    2. **Import Order**
+
+    ```python
+    # Standard libraries
+    from typing import Dict, Any
+
+    # Third-party libraries
+    from pydantic import BaseModel
+
+    # langchain / langgraph related libraries
+    from langchain_core.messages import BaseMessage
+
+    # Project internal imports
+    from assistant_core.base_agent import BaseAgent
+    ```
+
+    3. **Documentation Comments**
+
+    ```python
+    """Module-level documentation
+
+      Describe the primary functions and purposes of the module
+      """
+
+      class CustomClass:
+          """Class-level documentation
+
+          Describe the class's responsibilities and main functionalities
+          """
+    ```
+
+    #### 2.4 BaseAgent Common Methods
+
+    ##### 2.4.1 State Management Methods
+
+    1. `_init_state_accessor`: Initialize state accessor
+    2. `get_workflow_control`: Get workflow control information
+    3. `get_context_values`: Get context values with action_type parameter
+    4. `_create_agent_output`: Create standard output
+
+    ##### 2.4.2 LLM Configuration Methods
+
+    1. `_init_llm`: Initialize LLM
+    2. `_create_base_llm`: Create LLM instance
+    3. `_configure_structured_output`: Configure structured output
+    4. `get_context_template`: Get context template
+
+    #### 2.5 Best Practices
+
+    1. **State/Context Access, Workflow State Updates/Control**
+      - Use StateAccessor to retrieve historical context messages from other Agent
+        nodes in the workflow team. These messages serve as dynamic context variables
+        in the prompt template.
+      - The Langgraph GraphRouter controls dynamic routing by updating WorkflowControl
+        conditions, triggering next workflow steps with `next_node`,
+        `state_transition`, and `action`.
+
+    2. **Prompt Related**
+      - The `prompt_config.yaml` file configures paths for all component files (.MD)
+        in each Agent's prompt package, plus LLM AI Provider model configs.
+      - PromptManager loads prompt packages and provides them to BaseAgent's
+        `_create_agent_prompt_template()` method for creating prompt templates.
+      - `<few_shot_examples>` in `system_prompt.md` provides detailed input/output
+        examples for LLM AI inference.
+
+    3. **Technical Implementation Principles**
+      - Avoid unnecessary exception checks, error handling, and data validation
+        during core business logic development.
+      - Utilize existing Langchain / Langgraph infrastructure tools effectively
+        instead of reinventing the wheel.
+
+    4. **Code Quality**
+      - Follow PEP 8 standards
+      - Limit each line of code to 75 characters
+      - Use type annotations
+      - Write clear documentation
+      - Keep the code concise
+
+    #### 2.6 Agent Standard Execution Flow
+
+    ```mermaid
+    sequenceDiagram
+        participant Agent
+        participant BaseAgent
+        participant LLM
+        participant State
+
+        Agent->>BaseAgent: Initialize
+        BaseAgent->>BaseAgent: Configure LLM
+        BaseAgent->>BaseAgent: Initialize State Accessor
+        Agent->>BaseAgent: Execute
+        BaseAgent->>LLM: Invoke
+        LLM-->>Agent: Response
+        Agent->>Agent: Business Processing
+        Agent->>BaseAgent: State Update
+        BaseAgent->>State: Sync State
+    ```
+
+    #### 2.7 Agent Component Relationship Diagram
+
+    ```mermaid
+    graph TB
+        subgraph Core Components
+            A[BaseAgent] --> B[State Management]
+            A --> C[LLM Configuration]
+            A --> D[Prompt Management]
+            A --> E[Execution Flow]
+        end
+
+        subgraph Agent Implementation
+            F[CustomAgent] --> G[Business Logic]
+            F --> H[Output Model]
+            F --> I[State Update]
+        end
+
+        A --> F
+    ```
+
+</agent_development_standard>
+
+</project_info>

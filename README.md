@@ -1,62 +1,67 @@
-# CursorFocus
+# CoderAgentFocus
 
-A lightweight tool that maintains a focused view of your project structure and environment. CursorFocus automatically tracks your project files, functions, and environment variables, updating every 60 seconds to keep you informed of changes.
+一款 Fork from CursorFocus 的轻量级工具，保持项目结构和环境的聚焦视图。CursorFocus 会自动追踪项目文件、函数和环境变量，并每 60 秒更新一次，以便让您时刻了解项目的变化。
+并根据检测项目 codebase 的实际技术栈，框架, 全局函数地图的定义, 全局关键变量等实际情况, 让 AI 对代码库进行深入分析 自动生成项目适配的 .cursorrules 文件。(目前 cursorrules 生成功能还是基于规则的, AI 生成功能正在开发中)
 
-Check out our [SHOWCASE.md](SHOWCASE.md) for detailed examples and real-world use cases!
 
-## Features
+## 功能
 
-- 🔄 Real-time project structure tracking
-- 📝 Automatic file and function documentation
-- 🌳 Hierarchical directory visualization
-- 📏 File length standards and alerts
-- 🎯 Project-specific information detection
-- 🔍 Smart project type detection (Chrome Extension, Node.js, Python)
-- 🧩 Modular and extensible design
-- 🎛️ Automatic .cursorrules generation and project adaptation
+- 🔄 实时项目结构追踪
+- 📝 自动文件和函数文档生成
+- 🌳 层级目录可视化
+- 📏 文件长度标准和警报
+- 🎯 项目特定信息检测
+- 🔍 项目类型检测（Chrome 扩展、Node.js、Python）
+- 🧩 模块化和可扩展设计
+- 🎛️ 自动生成 .cursorrules 和项目适配
 
-## Quick Start
+## 快速开始
 
-1. Clone CursorFocus into your project:
+1. 克隆 CursorFocus 项目：
+
    ```bash
    git clone https://github.com/Dror-Bengal/CursorFocus.git
    ```
 
-2. Make the run script executable:
+2. 添加运行脚本权限：
+
    ```bash
    chmod +x CursorFocus/run.sh
    ```
 
-3. Start CursorFocus:
+3. 启动 CursorFocus：
+
    ```bash
    ./CursorFocus/run.sh
    ```
 
-That's it! CursorFocus will automatically:
-- Create necessary configuration
-- Install dependencies
-- Start monitoring your project
-- Generate Focus.md documentation
+完成！CursorFocus 会自动：
+- 创建必要的配置
+- 安装依赖
+- 开始监控项目
+- 生成 Focus.md 文档
 
-## Multi-Project Support
+## 多项目支持
 
-CursorFocus can monitor multiple projects simultaneously. There are two ways to set this up:
+CursorFocus 可以同时监控多个项目。设置有两种方式：
 
-### 1. Automatic Project Detection
+### 1. 自动项目检测
 
-Run CursorFocus with the scan option to automatically detect projects:
+使用扫描选项运行 CursorFocus 自动检测项目：
+
 ```bash
 python3 CursorFocus/setup.py --scan /path/to/projects/directory
 ```
 
-This will:
-- Scan the directory for supported project types
-- List all detected projects
-- Let you choose which projects to monitor
+这将：
+- 扫描目录中的受支持项目类型
+- 列出所有检测到的项目
+- 让您选择要监控的项目
 
-### 2. Manual Configuration
+### 2. 手动配置
 
-Edit `config.json` to add multiple projects:
+编辑 `config.json` 以添加多个项目：
+
 ```json
 {
     "projects": [
@@ -76,81 +81,88 @@ Edit `config.json` to add multiple projects:
 }
 ```
 
-Each project can have its own:
-- Custom update interval
-- Ignored patterns
-- File length standards
-- Project-specific rules
+每个项目可以有自己的：
+- 自定义更新间隔
+- 忽略的模式
+- 文件长度标准
+- 项目特定规则
 
-### Project Types Supported:
-- Chrome Extensions (detected by manifest.json)
-- Node.js Projects (detected by package.json)
-- Python Projects (detected by setup.py or pyproject.toml)
-- React Applications (detected by src/App.js)
-- Generic Projects (basic structure)
+### 支持的项目类型：
 
-## Alternative Setup Methods
+- Chrome 扩展（通过 manifest.json 检测）
+- Node.js 项目（通过 package.json 检测）
+- Python 项目（通过 setup.py 或 pyproject.toml 检测）
+- React 应用（通过 src/App.js 检测）
+- 通用项目（基本结构）
 
-### Manual Setup
+## 替代设置方法
 
-If you prefer to set up manually:
+### 手动设置
 
-1. Install dependencies (Python 3.6+ required):
+如果您更喜欢手动设置：
+
+1. 安装依赖（需要 Python 3.6+）：
+
    ```bash
    cd CursorFocus
    pip install -r requirements.txt
    ```
 
-2. Create/edit config.json (optional)
-3. Run the script:
+2. 创建/编辑 config.json（可选）
+3. 运行脚本：
+
    ```bash
    python3 focus.py
    ```
 
-## Generated Files
+## 生成的文件
 
-CursorFocus automatically generates and maintains three key files:
+CursorFocus 会自动生成并维护三个关键文件：
 
-1. **Focus.md**: Project documentation and analysis
-   - Project overview and structure
-   - File descriptions and metrics
-   - Function documentation
-   
-2. **.cursorrules**: Project-specific Cursor settings
-   - Automatically generated based on project type
-   - Customized for your project's structure
-   - Updates as your project evolves
-   
+1. **Focus.md**：项目文档和分析
+   - 项目概述和结构
+   - 文件描述和指标
+   - 函数文档
+
+2. **.cursorrules**：项目特定的 Cursor 设置
+   - 根据项目类型自动生成
+   - 针对项目结构定制
+   - 随着项目的发展更新
 
 
-## Setup
+## 设置
 
-1. Clone or copy the CursorFocus directory to your project:
+1. 将 CursorFocus 目录克隆或复制到您的项目中：
+
    ```bash
    git clone https://github.com/Dror-Bengal/CursorFocus.git CursorFocus
    ```
 
-2. Install dependencies (Python 3.6+ required):
+2. 安装依赖（需要 Python 3.6+）：
+
    ```bash
    cd CursorFocus
    pip install -r requirements.txt
    ```
 
-3. Run the script:
+3. 运行脚本：
+
    ```bash
    python3 focus.py
    ```
 
-## Automatic Startup (macOS)
+## 自动启动（macOS）
 
-To have CursorFocus start automatically when you log in:
+要在登录时自动启动 CursorFocus：
 
-1. Create a LaunchAgent configuration:
+1. 创建 LaunchAgent 配置：
+
    ```bash
    mkdir -p ~/Library/LaunchAgents
    ```
 
-2. Create the file `~/Library/LaunchAgents/com.cursorfocus.plist` with:
+2. 创建文件 `~/Library/LaunchAgents/com.cursorfocus.plist`，内容为：
+
    ```xml
    <?xml version="1.0" encoding="UTF-8"?>
    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -174,43 +186,45 @@ To have CursorFocus start automatically when you log in:
    </dict>
    </plist>
    ```
-   
-   Replace `/path/to/your/CursorFocus/focus.py` with the actual path to your focus.py file.
 
-3. Load the LaunchAgent:
+   将 `/path/to/your/CursorFocus/focus.py` 替换为实际路径。
+
+3. 加载 LaunchAgent：
+
    ```bash
    launchctl load ~/Library/LaunchAgents/com.cursorfocus.plist
    ```
 
-4. To stop the automatic startup:
+4. 要停止自动启动：
+
    ```bash
    launchctl unload ~/Library/LaunchAgents/com.cursorfocus.plist
    ```
 
-## Output
+## 输出
 
-CursorFocus generates a `Focus.md` file in your project root with:
+CursorFocus 会在项目根目录生成一个 `Focus.md` 文件，包含：
 
-1. Project Overview
-   - Project name and description
-   - Key features and version
-   - Project type detection
+1. 项目概述
+   - 项目名称和描述
+   - 关键功能和版本
+   - 项目类型检测
 
-2. Project Structure
-   - Directory hierarchy
-   - File descriptions
-   - Function listings with detailed descriptions
-   - File type detection
-   - File length alerts based on language standards
+2. 项目结构
+   - 目录层级
+   - 文件描述
+   - 函数列表及详细描述
+   - 文件类型检测
+   - 根据语言标准的文件长度警报
 
-3. Code Analysis
-   - Key function identification
-   - Detailed function descriptions
-   - File length standards compliance
+3. 代码分析
+   - 关键函数识别
+   - 详细的函数描述
+   - 文件长度标准合规性
 
-## Configuration
+## 配置
 
-Edit `config.json` to customize:
+编辑 `config.json` 来定制：
 
 ```json
 {
@@ -239,57 +253,57 @@ Edit `config.json` to customize:
 }
 ```
 
-## File Length Standards
+## 文件长度标准
 
-CursorFocus includes built-in file length standards for different file types:
+CursorFocus 为不同类型的文件提供内置文件长度标准：
 
-- JavaScript/TypeScript:
-  - Regular files: 300 lines
-  - React components (.jsx/.tsx): 250 lines
+- JavaScript/TypeScript：
+  - 常规文件：300 行
+  - React 组件（.jsx/.tsx）：250 行
 
-- Python files: 400 lines
+- Python 文件：400 行
 
-- Style files:
-  - CSS/SCSS/LESS/SASS: 400 lines
+- 样式文件：
+  - CSS/SCSS/LESS/SASS：400 行
 
-- Template files:
-  - HTML: 300 lines
-  - Vue/Svelte components: 250 lines
+- 模板文件：
+  - HTML：300 行
+  - Vue/Svelte 组件：250 行
 
-- Configuration files:
-  - JSON/YAML/TOML: 100 lines
+- 配置文件：
+  - JSON/YAML/TOML：100 行
 
-- Documentation files:
-  - Markdown/RST: 500 lines
+- 文档文件：
+  - Markdown/RST：500 行
 
-The tool will alert you when files exceed these recommended limits.
+当文件超过这些推荐的行数时，工具会发出警报。
 
-## Project Structure
+## 项目结构
 
 ```
 CursorFocus/
-├── focus.py           # Main entry point
-├── analyzers.py       # File and code analysis
-├── config.py          # Configuration management
-├── content_generator.py # Focus file generation
-├── project_detector.py # Project type detection
-├── config.json        # User configuration
-└── requirements.txt   # Dependencies
+├── focus.py           # 主入口文件
+├── analyzers.py       # 文件和代码分析
+├── config.py          # 配置管理
+├── content_generator.py # Focus 文件生成
+├── project_detector.py # 项目类型检测
+├── config.json        # 用户配置
+└── requirements.txt   # 依赖
 ```
 
-## Supported Project Types
+## 支持的项目类型
 
-CursorFocus automatically detects and provides specialized information for:
+CursorFocus 会自动检测并提供以下项目的专用信息：
 
-- Chrome Extensions (manifest.json)
+- Chrome 扩展（manifest.json）
 - Node.js Projects (package.json)
 - Python Projects (setup.py, pyproject.toml)
 - Generic Projects (basic structure)
 
-## Contributing
+## 贡献
 
-Contributions are welcome! Please feel free to submit pull requests or create issues for bugs and feature requests.
+欢迎贡献！请随时提交拉取请求或创建错误和功能请求。
 
-## License
+## 许可证
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+本项目采用 MIT 许可证 - 详情请参阅 LICENSE 文件。

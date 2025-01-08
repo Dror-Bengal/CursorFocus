@@ -1,0 +1,173 @@
+{
+    "name": ".cursorrules",
+    "version": "1.0.0",
+    "last_updated": "2025-01-04T15:53:00Z",
+    "project_analysis": {
+      "basic_info": {
+        "name": "Quest2Wolfram",
+        "version": "dev-1.3.0",
+        "language": "Python",
+        "frameworks": {
+          "frontend": [],
+          "backend": [
+            "fastapi"
+          ],
+          "ml": [
+            "Langchain",
+            "Langgraph"
+          ],
+          "ai": [
+            "OpenAI-gpt-4o",
+            "Anthropic-claude-3-5-sonnet",
+            "Google-gemini-2.0-flash-exp"
+          ]
+        },
+        "type": "multi-agent-ai-system",
+        "environment": {
+          "python_version": "3.12",
+          "node_version": "N/A",
+          "cuda_support": false
+        }
+      },
+      "ai_behavior": {
+        "code_generation": {
+          "style": {
+            "prefer": [
+              "PEP 8 compliance",
+              "Type hints with pydantic",
+              "Langchain standard integration",
+              "Clear separation of multi-agent logic",
+              "Appropriate use of async/await",
+              "Well-structured BaseAgent & derived Agent classes"
+            ],
+            "avoid": [
+              "Overly complex exception handling",
+              "Global mutable states",
+              "Hidden or unexpected side-effects"
+            ]
+          },
+          "error_handling": {
+            "strategies": [
+              "Minimal additional error checks",
+              "Use built-in logging if needed"
+            ],
+            "logging": [
+              "Standard Python logging or none if possible",
+              "No excessive logging to keep code simple"
+            ]
+          },
+          "performance": {
+            "optimization": [
+              "Agent-based concurrency or parallelism if necessary",
+              "Use Python async for external API calls"
+            ],
+            "memory_management": [
+              "Avoid storing large context in memory",
+              "Rely on built-in ephemeral state usage"
+            ]
+          }
+        },
+        "ai_specific": {
+          "llm_integration": {
+            "providers": [
+              "OpenAI",
+              "Anthropic",
+              "Google"
+            ],
+            "model_configurations": [
+              "gpt-4o",
+              "claude-3-5-sonnet",
+              "gemini-flash-latest"
+            ]
+          },
+          "agent_system": {
+            "architecture": "Multi-Agent ReAct style (Supervisor + Analysis + Transform + Check + Reflect)",
+            "communication": [
+              "Shared state via state_accessor",
+              "WorkflowControl for transitions"
+            ],
+            "roles": [
+              "AnalysisAgent",
+              "TransformAgent",
+              "CheckAgent",
+              "ReflectAgent",
+              "SupervisorAgent"
+            ]
+          },
+          "ml_pipeline": {
+            "frameworks": [
+              "langchain",
+              "langgraph"
+            ],
+            "data_processing": [
+              "pydantic-based structured outputs",
+              "graph-based workflow definitions"
+            ],
+            "model_management": [
+              "Multiple LLM providers",
+              "Customizable LLM configs in prompt_manager"
+            ]
+          }
+        }
+      },
+      "development_standards": {
+        "testing": {
+          "frameworks": [
+            "pytest",
+            "unittest"
+          ],
+          "coverage": {
+            "threshold": 80,
+            "excludes": [
+              "tests/legacy",
+              "cli_scripts"
+            ]
+          },
+          "types": [
+            "unit",
+            "integration",
+            "mock-lambda"
+          ]
+        },
+        "documentation": {
+          "style": "PEP 8 docstrings plus agent doc references",
+          "required_sections": [
+            "Module-level doc",
+            "Class-level doc",
+            "Method docstrings"
+          ],
+          "api_documentation": true
+        },
+        "code_quality": {
+          "linters": [
+            "flake8",
+            "ruff"
+          ],
+          "formatters": [
+            "black",
+            "isort"
+          ],
+          "metrics": [
+            "radon",
+            "pytest-cov"
+          ]
+        }
+      }
+    },
+    "project_info": {
+      "name": "Quest2Wolfram",
+      "description": "Quest2Wolfram is a multi-agent system-based mathematical problem-solving engine that converts mathematical problems into Wolfram|Alpha API query instructions. Built on Langchain & Langgraph frameworks, focusing on AI LLM-based structured output for K12 science education.",
+      "objectives": [
+        "Implement a flexible multi-agent ReAct style architecture",
+        "Convert math problems to WolframAlpha queries accurately",
+        "Leverage LLM frameworks for step-by-step reasoning"
+      ],
+      "architecture": "Supervisor + Analysis + Transform + Check + Reflect agents under Graph Router (langgraph)",
+      "team_structure": [
+        "Project Architect",
+        "Engineers",
+        "AI Prompt Specialist"
+      ],
+      "development_process": "Follow the BaseAgent standard in project_info.mdx: define Pydantic output, implement output handlers, keep code complexity minimal, rely on existing Langchain & Langgraph infrastructure."
+    }
+  }  

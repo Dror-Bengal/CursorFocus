@@ -5,7 +5,7 @@ import logging
 import traceback
 from typing import Dict, Any, Optional
 from pydantic_ai import Agent
-from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.models.openai import OpenAIModel # 使用 OpenAI 兼容模式
 from dotenv import load_dotenv
 
 # 导入项目代码库扫描功能
@@ -57,7 +57,7 @@ def get_agent() -> Agent[None, CursorRules]:
     """
     api_key = load_openrouter_api_key()
 
-    # 配置 OpenAIModel 使用 OpenRouter
+    # 配置 LLM Model 使用 OpenRouter OpenAI 兼容模式
     model = OpenAIModel(
         model_name="anthropic/claude-3.5-sonnet",
         base_url="https://openrouter.ai/api/v1",
