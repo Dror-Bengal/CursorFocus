@@ -1,10 +1,10 @@
 import os
 import time
 from datetime import datetime
-from config import load_config
-from content_generator import generate_focus_content
-from rules_analyzer import RulesAnalyzer
-from rules_generator import RulesGenerator
+from .config import load_config, get_default_config
+from .content_generator import generate_focus_content
+from .rules_analyzer import RulesAnalyzer
+from .rules_generator import RulesGenerator
 
 def get_default_config():
     """Get default configuration with parent directory as project path."""

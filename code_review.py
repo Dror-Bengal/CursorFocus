@@ -23,25 +23,21 @@ class CodeReviewGenerator:
 
     def get_relevant_files(self, project_path: str) -> List[str]:
         """Get list of relevant files for review"""
-        ignored = {'.git', 'node_modules', '.next', 'dist', 'build', 'coverage', 'CursorFocus'}
+        ignored = {'.git', 'node_modules', '.next', 'dist', 'build', 'coverage'}
         files = []
         
-        cursorfocus_path = os.path.join(project_path, 'CursorFocus')
-        
         for root, dirs, filenames in os.walk(project_path):
-            # Skip CursorFocus directory and other ignored directories
+            # Skip ignored directories
             dirs[:] = [d for d in dirs if d not in ignored]
             
-            # Skip if we're in the CursorFocus directory or its subdirectories
-            if root.startswith(cursorfocus_path):
+            # Skip CursorFocus directory
+            if 'CursorFocus' in root.split(os.sep):
                 continue
                 
             for filename in filenames:
                 if filename.endswith(('.js', '.jsx', '.ts', '.tsx', '.py', '.css', '.scss')):
                     file_path = os.path.join(root, filename)
-                    # Double check we're not including any CursorFocus files
-                    if not file_path.startswith(cursorfocus_path):
-                        files.append(file_path)
+                    files.append(file_path)
         return files
 
     def analyze_code_structure(self, project_path: str, files: List[str]) -> Dict:
@@ -1015,6 +1011,7 @@ def is_binary_file(content: str) -> bool:
         return True
 
 def main():
+    """Main function to generate code review."""
     logging.basicConfig(level=logging.INFO)
     
     # Load environment variables
@@ -1027,13 +1024,14 @@ def main():
         logging.error("GEMINI_API_KEY not found in environment variables")
         return
     
-    project_path = os.getenv('PROJECT_PATH', os.getcwd())
+    # Use parent directory as project path
+    project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     
     # Generate review
     reviewer = CodeReviewGenerator(api_key)
     review_content = reviewer.generate_review(project_path)
     
-    # Save review
+    # Save review in project root
     output_file = os.path.join(project_path, 'CodeReview.md')
     try:
         with open(output_file, 'w') as f:

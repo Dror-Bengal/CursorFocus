@@ -1,7 +1,5 @@
 # Environment variables
 .env
-.env.*
-!.env.example
 
 # Python
 __pycache__/
@@ -35,10 +33,7 @@ env/
 .vscode/
 *.swp
 *.swo
-
-# OS
 .DS_Store
-Thumbs.db
 
 # Generated files
 CodeReview.md
