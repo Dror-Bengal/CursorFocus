@@ -18,7 +18,7 @@ An AI-powered code review and project analysis tool that provides intelligent, c
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/CursorFocus.git
+git clone https://github.com/Dror-Bengal/CursorFocus.git
 ```
 
 2. Create and activate a virtual environment (recommended):
